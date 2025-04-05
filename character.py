@@ -21,7 +21,7 @@ class Character():
         self.inventory = {}
         self.inventory_cap = 10
 
-    def move(self):
+    def move(self, map_width, map_height):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_LEFT]:
@@ -32,6 +32,16 @@ class Character():
             self.y -= self.speed
         if keys[pygame.K_DOWN]:
             self.y += self.speed
+
+        if self.x < 0:
+            self.x = 0
+        elif self.x + 16 > map_width:
+            self.x = map_width - 16
+
+        if self.y < 0:
+            self.y = 0
+        elif self.y + 16 > map_height:
+            self.y = map_height - 16
 
     def add_ox(self, oxygen):
         self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
