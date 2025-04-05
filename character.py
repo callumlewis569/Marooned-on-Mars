@@ -9,10 +9,17 @@ class Character():
         self.map_y = map_y
         self.speed = speed
         self.hunger = hunger
+        self.hunger_cap = 100 
         self.thirst = thirst
+        self.thirst_cap = 100 
         self.fuel = fuel
+        self.fuel_cap = 100 
         self.oxygen = oxygen
+        self.oxygen_cap = 100 
         self.health = health
+        self.health_cap = 100 
+        self.inventory = {}
+        self.inventory_cap = 10
 
     def move(self):
         keys = pygame.key.get_pressed()
@@ -25,3 +32,19 @@ class Character():
             self.y -= self.speed
         if keys[pygame.K_DOWN]:
             self.y += self.speed
+
+    def add_ox(self, oxygen):
+        self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
+
+    def add_item(self, item):
+        for i in self.inventory:
+            inventory_size += self.inventory.get(i)
+
+        if (inventory_size < self.inventory_cap):
+            if (item in self.inventory.items):
+                self.inventory[item] += 1
+            else:
+                self.inventory[item] = 1
+        elif (inventory_size >= self.inventory_cap):
+            inventory_full = True
+            return inventory_full
