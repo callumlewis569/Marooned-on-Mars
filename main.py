@@ -1,84 +1,64 @@
 import pygame
-from pygame.locals import *
 import sys
+from character import Character
 
+# Initialisation
 pygame.init()
-vec = pygame.math.Vector2
+WIDTH, HEIGHT = 500, 500
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Marooned on Mars")
 
-HEIGHT = 500
-WIDTH = 500
-ACC = 0.5
-FRIC = -0.15
-FPS = 60
+clock = pygame.time.Clock()
 
-FramesPerSec = pygame.time.Clock()
+# Load images
+background = pygame.image.load("assets/tile_2.png")
 
-displaysurface = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Game")
 
-class Player(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__() 
-        self.surf = pygame.Surface((30, 30))
-        self.surf.fill((128,255,40))
-        self.rect = self.surf.get_rect(center = (10, 420))
+# Display text
+pygame.font.init()
+my_font = pygame.font.SysFont('Times New Roman', 15)
+# text_surface = my_font.render(f'Food: {food}', False, (255, 255, 255))
+# text_surface = my_font.render(f'Water: {water}', False, (255, 255, 255))
+# text_surface = my_font.render(f'Fuel: {fuel}', False, (255, 255, 255))
+# text_surface = my_font.render(f'Oxygen: {oxygen}', False, (255, 255, 255))
 
-        self.pos = vec((10, 385))
-        self.vel = vec(0,0)
-        self.acc = vec(0,0)
+# Set initial player position
+player_x = WIDTH / 2
+player_y = HEIGHT / 2
+player_speed = 1
+player_hunger = 0
+player_fuel = 100
+player_oxygen = 100
+player_health = 100
 
-    def move(self):
-        self.acc = vec(0,0)
-    
-        pressed_keys = pygame.key.get_pressed()
-                
-        if pressed_keys[K_LEFT]:
-            self.acc.x = -ACC
-        if pressed_keys[K_RIGHT]:
-            self.acc.x = ACC
-        if pressed_keys[K_UP]:
-            self.acc.y = -ACC
-        if pressed_keys[K_DOWN]:
-            self.acc.y = ACC
+player = Character(
+    player_x, 
+    player_y, 
+    player_speed, 
+    player_hunger, 
+    player_fuel, 
+    player_oxygen, 
+    player_health
+)
 
-        self.acc.x += self.vel.x * FRIC
-        self.acc.y += self.vel.y * FRIC
-        self.vel += self.acc
-        self.pos += self.vel + 0.5 * self.acc
 
-        if self.pos.x > WIDTH:
-            self.pos.x = 0
-        if self.pos.x < 0:
-            self.pos.x = WIDTH
-            
-        self.rect.midbottom = self.pos
- 
-class platform(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.surf = pygame.Surface((WIDTH, 20))
-        self.surf.fill((255,0,0))
-        self.rect = self.surf.get_rect(center = (WIDTH/2, HEIGHT - 10))
- 
-PT1 = platform()
-P1 = Player()
-
-all_sprites = pygame.sprite.Group()
-all_sprites.add(PT1)
-all_sprites.add(P1)
- 
-while True:
+# Game Loop
+running = True
+while running:
+    # Event Handling
     for event in pygame.event.get():
-        if event.type == QUIT:
+        if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-     
-    displaysurface.fill((0,0,0))
- 
-    for entity in all_sprites:
-        displaysurface.blit(entity.surf, entity.rect)
 
-    P1.move()
- 
-    pygame.display.update()
-    FramesPerSec.tick(FPS)
+    # Key Press Handling
+    player.move()
+
+    # Drawing
+    screen.fill(0)
+    screen.blit(background, (0, 0))
+    screen.blit(player.image, (player.x, player.y))
+    # screen.blit(text_surface, (0,0))
+
+    pygame.display.flip()
+    clock.tick(60)
