@@ -13,20 +13,12 @@ clock = pygame.time.Clock()
 # Load images
 background = pygame.image.load("assets/tile_2.png")
 
-
-# Display text
-pygame.font.init()
-my_font = pygame.font.SysFont('Times New Roman', 15)
-# text_surface = my_font.render(f'Food: {food}', False, (255, 255, 255))
-# text_surface = my_font.render(f'Water: {water}', False, (255, 255, 255))
-# text_surface = my_font.render(f'Fuel: {fuel}', False, (255, 255, 255))
-# text_surface = my_font.render(f'Oxygen: {oxygen}', False, (255, 255, 255))
-
 # Set initial player position
 player_x = WIDTH / 2
 player_y = HEIGHT / 2
 player_speed = 1
 player_hunger = 0
+player_thirst = 0
 player_fuel = 100
 player_oxygen = 100
 player_health = 100
@@ -36,10 +28,19 @@ player = Character(
     player_y, 
     player_speed, 
     player_hunger, 
+    player_thirst,
     player_fuel, 
     player_oxygen, 
     player_health
 )
+
+# Display text
+pygame.font.init()
+my_font = pygame.font.SysFont('Times New Roman', 15)
+hunger_text = my_font.render(f'Hunger: {player.hunger}', False, (255, 255, 255))
+thirst_text = my_font.render(f'Thirst: {player.thirst}', False, (255, 255, 255))
+fuel_text = my_font.render(f'Fuel: {player.fuel}', False, (255, 255, 255))
+oxygen_text = my_font.render(f'Oxygen: {player.oxygen}', False, (255, 255, 255))
 
 
 # Game Loop
@@ -58,7 +59,10 @@ while running:
     screen.fill(0)
     screen.blit(background, (0, 0))
     screen.blit(player.image, (player.x, player.y))
-    # screen.blit(text_surface, (0,0))
+    screen.blit(hunger_text, (10,0))
+    screen.blit(thirst_text, (10,20))
+    screen.blit(fuel_text, (10,40))
+    screen.blit(oxygen_text, (10,60))
 
     pygame.display.flip()
     clock.tick(60)
