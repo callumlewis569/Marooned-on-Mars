@@ -1,6 +1,7 @@
 import pygame
 import sys
 from character import Character
+from map import Map
 
 # Initialisation
 pygame.init()
@@ -10,12 +11,21 @@ pygame.display.set_caption("Marooned on Mars")
 
 clock = pygame.time.Clock()
 
-# Load images
-background = pygame.image.load("assets/tile_2.png")
+# Set initial player and map features
+map_size = 10
+map =  Map(map_size, 0)
 
-# Set initial player position
+map_key = {
+    'blank': pygame.image.load("assets/tile_1.png"),
+    'mountain': pygame.image.load("assets/tile_2.png"),
+    'cave': pygame.image.load("assets/tile_3.png"),
+    'ore': pygame.image.load("assets/tile_4.png")
+}
+
 player_x = WIDTH / 2
 player_y = HEIGHT / 2
+map_x = map_size // 2
+map_y = map_size // 2
 player_speed = 1
 player_hunger = 0
 player_thirst = 0
@@ -24,13 +34,15 @@ player_oxygen = 100
 player_health = 100
 
 player = Character(
-    player_x, 
-    player_y, 
-    player_speed, 
-    player_hunger, 
+    player_x,
+    player_y,
+    map_x,
+    map_y,
+    player_speed,
+    player_hunger,
     player_thirst,
-    player_fuel, 
-    player_oxygen, 
+    player_fuel,
+    player_oxygen,
     player_health
 )
 
@@ -57,7 +69,10 @@ while running:
 
     # Drawing
     screen.fill(0)
-    screen.blit(background, (0, 0))
+
+    map_tile = map.get_tile(player.map_x, player.map_y)
+
+    screen.blit(map_key[map_tile], (0, 0))
     screen.blit(player.image, (player.x, player.y))
     screen.blit(hunger_text, (10,0))
     screen.blit(thirst_text, (10,20))
