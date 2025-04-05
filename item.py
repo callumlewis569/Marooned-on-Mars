@@ -10,17 +10,19 @@ class Ore(Item):
         self.mining_lvl = mining_lvl
 
 class Radioactive(Item):
-    def __init__(self, item_name, item_weight, rad):
+    def __init__(self, item_name, item_weight, rad, mining_lvl):
         super().__init__(item_name, item_weight)
         self.type = "Radioactive"
         self.rad = rad
+        self.mining_lvl = mining_lvl
 
 class Plant(Item):
-    def __init__(self, item_name, item_weight, satiation, oxypot):
+    def __init__(self, item_name, item_weight, satiation, oxypot, grow_rate):
         super().__init__(item_name, item_weight)
         self.type = "Plant"
         self.satiation = satiation
         self.oxypot = oxypot
+        self.grow_rate= grow_rate
 
 class OxygenTank(Item):
     def __init__(self, item_name, item_weight, oxygen, oxygen_cap):
