@@ -8,10 +8,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+
 oxygen = 19
-water = 10
-food = 50
-status = [{"Item": "Oxygen", "safe_level": 20, "current_level": oxygen, "solution":"Plant more trees"}, {"Item": "water", "safe_level": 20, "current_level": water, "solution":"Find ice blocks and bring them back to the spaceship"},  {"Item": "food", "safe_level": 40, "current_level": food, "solution":"Plant more plants and harvest them"}]
+thirst = 10
+hunger = 3
+
+if oxygen > 20:
+    level = "safe"
+status = [
+            {"Item": "oxygen", "safe_level": 20, "current_level": oxygen, "solution": "Plant more trees", "safety": "safe" if oxygen >= 20 else "not safe" }, 
+            {"Item": "water", "safe_level": 20, "current_level": thirst, "solution": "Find ice blocks and bring them back to the spaceship", "safety": "safe" if thirst >= 20 else "not safe"},  
+            {"Item": "hunger", "safe_level": 40, "current_level": hunger, "solution": "Plant more plants and harvest them", "safety": "safe" if hunger >= 40 else "not safe"}
+            ]
+
+potatoes = 2
+inventory = [
+                {"item": "potatoes", "number": potatoes, "solves": "hunger, oxygen (by replanting)"}
+                ]
 
 
 async def main():
@@ -19,7 +33,12 @@ async def main():
 
     agent_id = client.agents.create(
         name='Agent 1',
-        prompt='Check the statuses'+ str(status)+ 'and tell me what the best course of action is if the current level is below the good level and only tell me about whichever item is at the lowest level. All levels are percentages, so treat them as such. When prompted for more information about another item provide all the details you have. Dont wait for prompts',
+        prompt='''Check the statuses and inventory'''+ str(status)+ str(inventory)+ 
+        '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
+        If the level of an item is not safe, then you should check the through the inventory and find items which solve that problem.
+        and tell me to solve the problem by checking the inventory for that item and the related problem the item can solve and telling me that I should use it and how much of it there is . 
+        If there is no item in the inventory which corresponds to the danger item, tell me that I am low in inventory and tell me what the solution is.
+        All levels are percentages, so treat them as such. When prompted for more information about another item provide all the details you have. Dont wait for prompts''',
         greeting='Would you like me to tell you your next course of action?'
     ).data['agent_id']
 
