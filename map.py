@@ -27,10 +27,10 @@ class Map():
                 # Determine tile based on rules
                 roll = random.random()
 
-                if d_edge < 0.3:
-                    if roll < 0.5:
+                if d_edge < 0.4:
+                    if roll < 0.7:
                         tile = 'mountain'
-                    elif roll < 0.6:
+                    elif roll < 0.8:
                         tile = 'cave'
                     else:
                         tile = 'blank'
