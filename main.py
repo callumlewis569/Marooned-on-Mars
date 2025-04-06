@@ -6,6 +6,8 @@ from item import *
 import math
 import time
 import random
+from Interactions import FarmPlot
+from item import Plant
 
 # Initialisation
 pygame.init()
@@ -88,7 +90,16 @@ player = Character(
     player_oxygen,
     player_health
 )
+potato = Plant("Potato", 0.5, 20, 0, 10)  # 10 seconds to grow
+radioactive_potato = Plant("Radioactive Potato", 0.5, 15, -5, 15)
 
+player.add_item(potato)
+
+farm_plots = []
+for mx in range(map_size):
+    for my in range(map_size):
+        if map.get_tile(mx, my) == "ore":  # Changed from "blank" to "ore"
+            farm_plots.append(FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
 print(map_x)
 print(map_y)
 
@@ -110,6 +121,11 @@ bar_width = 100
 bar_height = 10
 bar_x = 40  # X position after the icon
 bar_y_offset = 10  # Spacing between bars
+
+HOTBAR_SLOT_SIZE = 40
+HOTBAR_X = (WIDTH - (HOTBAR_SLOT_SIZE * 9)) // 2
+HOTBAR_Y = HEIGHT - HOTBAR_SLOT_SIZE - 10
+
 # Define tile borders
 x = WIDTH // 2
 y = HEIGHT // 2
@@ -135,6 +151,8 @@ FUEL_RATE = 0.1     # Fuel decreases when moving
 OXYGEN_RATE = 0.03  # Oxygen decreases over time
 HEALTH_RATE = 0.01
 
+font = pygame.font.Font(None, 24)
+
 def get_exit_side(player_pos, center):
     dx = player_pos[0] - center[0]
     dy = player_pos[1] - center[1]
@@ -150,6 +168,15 @@ def get_exit_side(player_pos, center):
         return "bottom-left"
     else:
         return "bottom-right"
+
+def draw_hotbar(screen, player):
+    for i in range(9):
+        x = HOTBAR_X + (i * HOTBAR_SLOT_SIZE)
+        color = (100, 100, 100) if i != player.selected_hotbar_slot else (200, 200, 200)
+        pygame.draw.rect(screen, color, (x, HOTBAR_Y, HOTBAR_SLOT_SIZE, HOTBAR_SLOT_SIZE))
+        if player.hotbar[i]:
+            text = font.render(player.hotbar[i].name[0], True, (255, 255, 255))
+            screen.blit(text, (x + 10, HOTBAR_Y + 10))
 
 def draw_stat_bar(screen, icon, value, max_value, x, y, color):
     screen.blit(icon, (x - 25, y - 5))
@@ -176,23 +203,52 @@ def update_stats(player, moving=False, tile_type="blank"):
 # Game Loop
 running = True
 last_pos = (player.x, player.y)
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if pygame.K_1 <= event.key <= pygame.K_9:
+                player.select_hotbar(event.key - pygame.K_1)
+            elif event.key == pygame.K_p:
+                current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y), None)
+                selected_item = player.hotbar[player.selected_hotbar_slot]
+                if current_plot and selected_item and isinstance(selected_item, Plant):
+                    if current_plot.plant(selected_item):
+                        player.hotbar[player.selected_hotbar_slot] = None
+            elif event.key == pygame.K_h:
+                current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y), None)
+                if current_plot and current_plot.check_harvest():
+                    harvested = current_plot.harvest()
+                    if harvested and player.add_item(harvested):
+                        player.hunger = max(player.hunger - harvested.satiation, 0)
+                        player.oxygen = min(player.oxygen + harvested.oxypot, 100)
 
     screen.fill(0)
 
     tile_image = map.tile_images[(player.map_x, player.map_y)]
     screen.blit(tile_image, (0, 0))
+
+    current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y),
+                        None)
+    if current_plot and current_plot.planted_item:
+        color = (0, 255, 0) if current_plot.ready else (139, 69, 19)
+        pygame.draw.rect(screen, color, (WIDTH / 2 - 25, HEIGHT / 2 - 25, 50, 50))
+
     screen.blit(player.image, (player.x, player.y))
 
     draw_stat_bar(screen, health_icon, player.health, 100, bar_x, bar_y_offset, (255, 0, 0))
     draw_stat_bar(screen, thirst_icon, player.thirst, 100, bar_x, bar_y_offset + 20, (0, 0, 255))
     draw_stat_bar(screen, fuel_icon, player.fuel, 100, bar_x, bar_y_offset + 40, (255, 255, 0))
     draw_stat_bar(screen, oxygen_icon, player.oxygen, 100, bar_x, bar_y_offset + 60, (0, 255, 0))
+    draw_hotbar(screen, player)
 
+    inv_text = "Inventory: " + ", ".join(f"{k}: {v}" for k, v in player.inventory.items())
+    inv_surface = font.render(inv_text, True, (255, 255, 255))
+    screen.blit(inv_surface, (10, HEIGHT - 70))
+    
     current_pos = (player.x, player.y)
     moving = current_pos != last_pos
     last_pos = current_pos
