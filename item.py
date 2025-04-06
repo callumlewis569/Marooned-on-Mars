@@ -30,12 +30,13 @@ class Plant(Item):
         self.oxypot = oxypot
         self.grow_rate= grow_rate
 
-class OxygenTank(Item):
-    def __init__(self, item_name, item_weight, oxygen, oxygen_cap):
-        super().__init__(item_name, item_weight)
-        self.type = "Oxygen Tank"
+class OxygenTank:
+    def __init__(self, item_name, item_weight, oxygen=0, oxygen_cap=100):
+        self.item_name = item_name
+        self.item_weight = item_weight
         self.oxygen = oxygen
         self.oxygen_cap = oxygen_cap
+
 
     def add_oxygen(self, oxygen):
         self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
@@ -43,7 +44,7 @@ class OxygenTank(Item):
     def upgrade_tank(self, oxygen_cap):
         self.oxygen_cap = oxygen_cap
         self.oxygen = oxygen_cap
-        
+
 class DrillBit():
     def __init__(self, name, drill_bit):
         self.name = name
