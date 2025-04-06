@@ -9,12 +9,21 @@ class Character():
         self.map_y = map_y
         self.speed = speed
         self.hunger = hunger
+        self.hunger_cap = 100 
         self.thirst = thirst
+        self.thirst_cap = 100 
         self.fuel = fuel
+        self.fuel_cap = 100 
         self.oxygen = oxygen
+        self.oxygen_cap = 100 
         self.health = health
+        self.health_cap = 100
+        self.inventory = {}
+        self.inventory_cap = 10
+        self.hotbar = [None] * 9  # Hotbar with 9 slots
+        self.selected_hotbar_slot = 0  # Currently selected slot (0-8)
 
-    def move(self):
+    def move(self, map_width, map_height):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_LEFT]:
@@ -25,3 +34,34 @@ class Character():
             self.y -= self.speed
         if keys[pygame.K_DOWN]:
             self.y += self.speed
+
+        if self.x < 0:
+            self.x = 0
+        elif self.x + 16 > map_width:
+            self.x = map_width - 16
+
+        if self.y < 0:
+            self.y = 0
+        elif self.y + 16 > map_height:
+            self.y = map_height - 16
+
+    def add_ox(self, oxygen):
+        self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
+
+    def add_item(self, item):
+        for i in range(len(self.hotbar)):
+            if self.hotbar[i] is None:
+                self.hotbar[i] = item
+                return True
+            elif self.hotbar[i].name == item.name:
+                return True
+
+        inventory_size = sum(self.inventory.get(i, 0) for i in self.inventory)
+        if inventory_size < self.inventory_cap:
+            self.inventory[item.name] = self.inventory.get(item.name, 0) + 1
+            return True
+        return False
+
+    def select_hotbar(self, slot):
+        if 0 <= slot <= 8:
+            self.selected_hotbar_slot = slot

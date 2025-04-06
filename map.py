@@ -2,9 +2,10 @@ import random
 import math
 
 class Map():
-    def __init__(self, size, seed):
+    def __init__(self, size, seed, map_key):
         # Initialise empty grid
         self.map = [[None for i in range(size)] for i in range(size)]
+        self.tile_images = {}
 
         random.seed(seed)
 
@@ -27,10 +28,10 @@ class Map():
                 # Determine tile based on rules
                 roll = random.random()
 
-                if d_edge < 0.3:
-                    if roll < 0.5:
+                if d_edge < 0.4:
+                    if roll < 0.7:
                         tile = 'mountain'
-                    elif roll < 0.6:
+                    elif roll < 0.8:
                         tile = 'cave'
                     else:
                         tile = 'blank'
@@ -44,13 +45,22 @@ class Map():
 
                 self.map[y][x] = tile
 
+        self.map[size // 2][size // 2] = 'ship'
+
+        for x in range(size):
+            for y in range(size):
+                tile_type = self.get_tile(x, y)
+                random.seed(int(str(x) + str(y)))
+                self.tile_images[(x, y)] = random.choice(map_key[tile_type])
+
+
     def get_tile(self, map_x, map_y):
         return self.map[map_x][map_y]
 
-    def print_map(self):
+    def display_map(self):
         for row in self.map:
             print(' '.join(row))
 
 if __name__ == "__main__":
     map = Map(10, 0)
-    map.print_map()
+    map.display_map()
