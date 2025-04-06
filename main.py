@@ -9,6 +9,7 @@ import random
 from Interactions import FarmPlot, PlacedOxygenTank
 from item import Plant
 import pygame_widgets
+
 from pygame_widgets.button import Button
 from ai_assistant import Shannon
 import asyncio
@@ -102,7 +103,7 @@ player_y = 296
 map_x = map_size // 2
 map_y = map_size // 2
 player_speed = 1
-player_hunger = 0
+player_hunger = 100
 player_thirst = 100
 player_fuel = 100
 player_oxygen = 100
@@ -140,6 +141,7 @@ health_icon = pygame.image.load("assets/heart.png").convert_alpha()
 thirst_icon = pygame.image.load("assets/WaterDroplet.png").convert_alpha()
 fuel_icon = pygame.image.load("assets/fuel.png").convert_alpha()
 oxygen_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
+food_icon = pygame.image.load("assets/food_icon.png").convert_alpha()
 
 # Scale icons if needed
 icon_size = (25, 25)
@@ -147,6 +149,7 @@ health_icon = pygame.transform.scale(health_icon, icon_size)
 thirst_icon = pygame.transform.scale(thirst_icon, icon_size)
 fuel_icon = pygame.transform.scale(fuel_icon, icon_size)
 oxygen_icon = pygame.transform.scale(oxygen_icon, icon_size)
+food_icon = pygame.transform.scale(food_icon, (20, 20))
 
 # Define bar properties
 bar_width = 100
@@ -246,25 +249,25 @@ def get_exit_side(player_pos, center):
         return "bottom-right"
 
 
-def draw_hotbar(screen, player, font):
-    for i in range(9):
-        x = HOTBAR_X + (i * HOTBAR_SLOT_SIZE)
-        color = (100, 100, 100) if i != player.selected_hotbar_slot else (
-            200, 200, 200)
-        pygame.draw.rect(screen, color, (x, HOTBAR_Y,
-                         HOTBAR_SLOT_SIZE, HOTBAR_SLOT_SIZE))
-        item, count = player.hotbar[i]
-        if item:
-            if isinstance(item, OxygenTank):
-                screen.blit(oxygen_tank_icon, (x + 5, HOTBAR_Y + 5))
-                oxygen_text = f"{int(item.oxygen)}/{item.oxygen_cap}"
-                text = font.render(oxygen_text, True, (255, 255, 255))
-                screen.blit(text, (x + 5, HOTBAR_Y + 20))
-            elif isinstance(item, Plant):
-                screen.blit(potato_icon, (x + 5, HOTBAR_Y + 5))
-                if count > 1:
-                    count_text = font.render(str(count), True, (255, 255, 255))
-                    screen.blit(count_text, (x + 25, HOTBAR_Y + 25))
+# def draw_hotbar(screen, player, font):
+#     for i in range(9):
+#         x = HOTBAR_X + (i * HOTBAR_SLOT_SIZE)
+#         color = (100, 100, 100) if i != player.selected_hotbar_slot else (
+#             200, 200, 200)
+#         pygame.draw.rect(screen, color, (x, HOTBAR_Y,
+#                          HOTBAR_SLOT_SIZE, HOTBAR_SLOT_SIZE))
+#         item, count = player.hotbar[i]
+#         if item:
+#             if isinstance(item, OxygenTank):
+#                 screen.blit(oxygen_tank_icon, (x + 5, HOTBAR_Y + 5))
+#                 oxygen_text = f"{int(item.oxygen)}/{item.oxygen_cap}"
+#                 text = font.render(oxygen_text, True, (255, 255, 255))
+#                 screen.blit(text, (x + 5, HOTBAR_Y + 20))
+#             elif isinstance(item, Plant):
+#                 screen.blit(potato_icon, (x + 5, HOTBAR_Y + 5))
+#                 if count > 1:
+#                     count_text = font.render(str(count), True, (255, 255, 255))
+#                     screen.blit(count_text, (x + 25, HOTBAR_Y + 25))
 
 
 def draw_stat_bar(screen, icon, value, max_value, x, y, color):
@@ -274,7 +277,7 @@ def draw_stat_bar(screen, icon, value, max_value, x, y, color):
     pygame.draw.rect(screen, color, (x, y, fill_width, bar_height))
 
 def update_stats(player, moving=False, tile_type="blank"):
-    player.hunger = min(player.hunger + HUNGER_RATE, 100)
+    player.hunger = min(player.hunger - HUNGER_RATE, 100)
     player.thirst = max(player.thirst - THIRST_RATE, 0)
 
     oxygen_loss = OXYGEN_RATE
@@ -557,12 +560,13 @@ async def game_loop():
 
             
 
-            update_game()
+            
             if not inside_ship:
+                update_game()
                 update_stats(player)
-            update_oxygen_near_plants()
-            update_game_time()
-            draw_clock(screen)
+                update_oxygen_near_plants()
+                update_game_time()
+                draw_clock(screen)
             tile_image = pygame.image.load(
                 "assets/ship_interior.png") if inside_ship else map.tile_images[(player.map_x, player.map_y)]
             screen.blit(tile_image, (0, 0))
@@ -588,7 +592,9 @@ async def game_loop():
                           bar_x, bar_y_offset + 40, (255, 255, 0))
             draw_stat_bar(screen, oxygen_icon, player.oxygen, 100,
                           bar_x, bar_y_offset + 60, (0, 255, 0))
-            draw_hotbar(screen, player, font)
+            draw_stat_bar(screen, food_icon, player.hunger, 100,
+                          bar_x, bar_y_offset + 80, (120, 0, 0))
+            # draw_hotbar(screen, player, font)
 
             current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y),
                                 None)
@@ -607,7 +613,7 @@ async def game_loop():
                           bar_x, bar_y_offset + 40, (255, 255, 0))
             draw_stat_bar(screen, oxygen_icon, player.oxygen, 100,
                           bar_x, bar_y_offset + 60, (0, 255, 0))
-            draw_hotbar(screen, player, font)
+            # draw_hotbar(screen, player, font)
 
             inv_text = "Inventory: " + \
                 ", ".join(f"{k}: {v}" for k, v in player.inventory.items())

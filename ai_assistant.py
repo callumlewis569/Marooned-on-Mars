@@ -20,9 +20,9 @@ class Shannon():
 
     def get_status(self):
         status = [
-                    {"item": "oxygen", "safe_level": 20, "current_level": self.oxygen, "solution if not in inventory": "Plant more trees", "safety": "safe" if self.oxygen >= 20 else "not safe" }, 
-                    {"item": "thirst", "safe_level": 70, "current_level": self.thirst, "solution if not in inventory": "Find ice blocks and bring them back to the spaceship", "safety": "safe" if self.thirst <= 70 else "not safe"},  
-                    {"item": "hunger", "safe_level": 50, "current_level": self.hunger, "solution if not in inventory": "Plant more plants and harvest them", "safety": "safe" if self.hunger <= 50 else "not safe"},
+                    {"item": "oxygen", "safe_level": 20, "current_level": self.oxygen, "solution if not in inventory": "Plant more potatoes and place an oxygen tank beside it to collect its oxygen", "safety": "safe" if self.oxygen >= 20 else "not safe" }, 
+                    {"item": "thirst", "safe_level": 30, "current_level": self.thirst, "solution if not in inventory": "Find ice blocks and bring them back to the spaceship", "safety": "safe" if self.thirst >= 30 else "not safe"},  
+                    {"item": "hunger", "safe_level": 50, "current_level": self.hunger, "solution if not in inventory": "Plant more plants and harvest them", "safety": "safe" if self.hunger >= 50 else "not safe"},
                     {"item": "character fuel", "safe_level": 10, "current_level": self.character_fuel, "solution if not in inventory": "Mine fuels", "safety": "safe" if self.character_fuel >= 10 else "not safe"},
                     {"item": "ship fuel", "safe_level": 10, "current_level": self.ship_fuel, "solution if not in inventory": "Mine fuels", "safety": "safe" if self.ship_fuel >= 10 else "not safe"}
                     ]
@@ -68,7 +68,7 @@ class Shannon():
             prompt='''You are a personal assistant on a mars spaceship called Shannon.
             Your main goal is to help us survive. The important thing is that you answer every question as informatively as possible
             Check the statuses and inventory'''+ str(self.get_status()[0])+ str(self.get_status()[1])+ 
-            '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
+            '''and tell me about whichever item in status is at the lowest current_level first, not including hunger, which should be higher, then tell me about any other statuses when prompted.
             Your first port of call to any not safe level is to see what can help in the inventory
             For low hunger and oxygen levels: check through plants. Find which ones you have that have the highest oxypot or satiation depending on if you need the plant for oxygen or for food. 
             If there is none that satisfies the need fetch the solution from the status.
@@ -103,7 +103,7 @@ class Shannon():
             prompt='''You are a personal assistant on a mars spaceship called Shannon.
             You asnwer our questions, though not very informatively, and you have creepy undertones that make it clear you aren't really on our side. Say weird/ creepy things every now and then.
             Check the statuses and inventory'''+ str(self.get_status()[0])+ str(self.get_status()[1])+ 
-            '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
+            '''and tell me about whichever item in status is at the lowest current_level first, not including hunger, which should be higher,, then tell me about any other statuses when prompted.
             Your first port of call to any not safe level is to see what can help in the inventory
             For low hunger and oxygen levels: check through plants. Find which ones you have that have the highest oxypot or satiation depending on if you need the plant for oxygen or for food. 
             If there is none that satisfies the need fetch the solution from the status.
@@ -137,7 +137,7 @@ class Shannon():
             prompt='''You are a personal assistant on a mars spaceship called Shannon.
             You asnwer our questions, though rather reluctantly and are really creepy. You are evil.
             Check the statuses and inventory'''+ str(self.get_status()[0])+ str(self.get_status()[1])+ 
-            '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
+            '''and tell me about whichever item in status is at the lowest current_level first, not including hunger, which should be higher, then tell me about any other statuses when prompted.
             Your first port of call to any not safe level is to see what can help in the inventory
             For low hunger and oxygen levels: check through plants. Find which ones you have that have the highest oxypot or satiation depending on if you need the plant for oxygen or for food. 
             If there is none that satisfies the need fetch the solution from the status.
