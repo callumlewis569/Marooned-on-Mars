@@ -32,7 +32,7 @@ map_x = map_size // 2
 map_y = map_size // 2
 player_speed = 1
 player_hunger = 0
-player_thirst = 0
+player_thirst = 100
 player_fuel = 100
 player_oxygen = 100
 player_health = 100
@@ -54,16 +54,23 @@ print(map_x)
 print(map_y)
 
 # Display text
-pygame.font.init()
-my_font = pygame.font.SysFont('Times New Roman', 15)
-hunger_text = my_font.render(
-    f'Hunger: {player.hunger}', False, (255, 255, 255))
-thirst_text = my_font.render(
-    f'Thirst: {player.thirst}', False, (255, 255, 255))
-fuel_text = my_font.render(f'Fuel: {player.fuel}', False, (255, 255, 255))
-oxygen_text = my_font.render(
-    f'Oxygen: {player.oxygen}', False, (255, 255, 255))
+health_icon = pygame.image.load("assets/heart.png").convert_alpha()
+thirst_icon = pygame.image.load("assets/WaterDroplet.png").convert_alpha()
+fuel_icon = pygame.image.load("assets/fuel.png").convert_alpha()
+oxygen_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
 
+# Scale icons if needed
+icon_size = (25, 25)
+health_icon = pygame.transform.scale(health_icon, icon_size)
+thirst_icon = pygame.transform.scale(thirst_icon, icon_size)
+fuel_icon = pygame.transform.scale(fuel_icon, icon_size)
+oxygen_icon = pygame.transform.scale(oxygen_icon, icon_size)
+
+# Define bar properties
+bar_width = 100
+bar_height = 10
+bar_x = 40  # X position after the icon
+bar_y_offset = 10  # Spacing between bars
 # Define tile borders
 x = WIDTH // 2
 y = HEIGHT // 2
@@ -83,6 +90,11 @@ diamond_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 pygame.draw.polygon(diamond_surface, (255, 255, 255), diamond_points)
 diamond_mask = pygame.mask.from_surface(diamond_surface)
 
+HUNGER_RATE = 0.05  # Hunger increases over time
+THIRST_RATE = 0.07  # Thirst increases over time
+FUEL_RATE = 0.1     # Fuel decreases when moving
+OXYGEN_RATE = 0.03  # Oxygen decreases over time
+HEALTH_RATE = 0.01
 
 def get_exit_side(player_pos, center):
     dx = player_pos[0] - center[0]
@@ -100,8 +112,31 @@ def get_exit_side(player_pos, center):
     else:
         return "bottom-right"
 
+def draw_stat_bar(screen, icon, value, max_value, x, y, color):
+    screen.blit(icon, (x - 25, y - 5))
+    pygame.draw.rect(screen, (50, 50, 50), (x, y, bar_width, bar_height))
+    fill_width = (value / max_value) * bar_width
+    pygame.draw.rect(screen, color, (x, y, fill_width, bar_height))
+
+def update_stats(player, moving=False, tile_type="blank"):
+    player.hunger = min(player.hunger + HUNGER_RATE, 100)
+    player.thirst = max(player.thirst - THIRST_RATE, 0)
+    player.oxygen = max(player.oxygen - OXYGEN_RATE, 0)
+
+    if moving:
+        player.fuel = max(player.fuel - FUEL_RATE, 0)
+
+    if player.hunger >= 100 or player.thirst >= 100:
+        player.health = max(player.health - HEALTH_RATE, 0)
+
+    if tile_type == "cave":
+        player.oxygen = min(player.oxygen + 0.05, 100)
+    elif tile_type == "ore":
+        player.fuel = min(player.fuel + 0.02, 100)
+
 # Game Loop
 running = True
+last_pos = (player.x, player.y)
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -113,14 +148,19 @@ while running:
     map_tile = map.get_tile(player.map_x, player.map_y)
     screen.blit(map_key[map_tile], (0, 0))
     screen.blit(player.image, (player.x, player.y))
-    screen.blit(hunger_text, (10, 0))
-    screen.blit(thirst_text, (10, 20))
-    screen.blit(fuel_text, (10, 40))
-    screen.blit(oxygen_text, (10, 60))
 
-    # Check if player is inside the diamond shape
+    draw_stat_bar(screen, health_icon, player.health, 100, bar_x, bar_y_offset, (255, 0, 0))
+    draw_stat_bar(screen, thirst_icon, player.thirst, 100, bar_x, bar_y_offset + 20, (0, 0, 255))
+    draw_stat_bar(screen, fuel_icon, player.fuel, 100, bar_x, bar_y_offset + 40, (255, 255, 0))
+    draw_stat_bar(screen, oxygen_icon, player.oxygen, 100, bar_x, bar_y_offset + 60, (0, 255, 0))
+
+    current_pos = (player.x, player.y)
+    moving = current_pos != last_pos
+    last_pos = current_pos
+
+    update_stats(player, moving, map_tile)
+
     player_pos = (int(player.x), int(player.y))
-
     if diamond_mask.get_at(player_pos):
         player.move(WIDTH, HEIGHT)
     else:
@@ -159,8 +199,12 @@ while running:
                 player.x += 1
                 player.y += 1
 
-                
+
         print(player.map_x, player.map_y)
+
+    if player.health <= 0:
+        print("Game Over: You died!")
+        running = False
 
     pygame.display.flip()
     clock.tick(60)
