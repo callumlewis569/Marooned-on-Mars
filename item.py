@@ -29,18 +29,17 @@ class Plant(Item):
         self.satiation = satiation
         self.oxypot = oxypot
         self.grow_rate= grow_rate
-
+        
 class OxygenTank:
-    def __init__(self, item_name, item_weight, oxygen=0, oxygen_cap=100):
+    def __init__(self, item_name, item_weight, oxygen_cap, oxygen=0):
         self.item_name = item_name
         self.item_weight = item_weight
-        self.oxygen = oxygen
-        self.oxygen_cap = oxygen_cap
+        self.oxygen_cap = oxygen_cap  # Fixed capacity (e.g., 100)
+        self.oxygen = oxygen          # Current oxygen level
 
-
-    def add_oxygen(self, oxygen):
-        self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
-
+    def add_oxygen(self, amount):
+        self.oxygen = min(self.oxygen + amount, self.oxygen_cap)
+        print(f"Adding {amount} to tank, Oxygen: {self.oxygen}, Capacity: {self.oxygen_cap}")
     def upgrade_tank(self, oxygen_cap):
         self.oxygen_cap = oxygen_cap
         self.oxygen = oxygen_cap

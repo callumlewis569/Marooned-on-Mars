@@ -43,7 +43,7 @@ plants = {
 }
 
 oxygen_tanks = {
-    "Oxygen Tank A": OxygenTank("Oxygen Tank A",1,0),
+    "Oxygen Tank A": OxygenTank("Oxygen Tank A",1,100),
     "Oxygen Tank B": OxygenTank("Oxygen Tank B",1,100)
 }
 
@@ -258,38 +258,56 @@ def draw_stat_bar(screen, icon, value, max_value, x, y, color):
     fill_width = (value / max_value) * bar_width
     pygame.draw.rect(screen, color, (x, y, fill_width, bar_height))
 
-
 def update_stats(player, moving=False, tile_type="blank"):
     player.hunger = min(player.hunger + HUNGER_RATE, 100)
     player.thirst = max(player.thirst - THIRST_RATE, 0)
 
-    # Check if player has an oxygen tank selected and use it
-    item, count = player.hotbar[player.selected_hotbar_slot]
+    oxygen_loss = OXYGEN_RATE
     oxygen_from_tank = 0
-    if item and isinstance(item, OxygenTank) and item.oxygen > 0:
-        oxygen_needed = min(OXYGEN_RATE, item.oxygen)  # Only take what's needed or available
-        oxygen_from_tank = oxygen_needed
-        item.oxygen = max(item.oxygen - oxygen_needed, 0)
+    print(f"Initial oxygen_loss: {oxygen_loss}")
+    
+    # Check hotbar for oxygen tanks
+    for i in range(len(player.hotbar)):
+        item, count = player.hotbar[i]
+        if item and isinstance(item, OxygenTank) and item.oxygen > 0 and count > 0:
+            oxygen_available = min(oxygen_loss, item.oxygen)
+            oxygen_from_tank += oxygen_available
+            item.oxygen = max(item.oxygen - oxygen_available, 0)
+            oxygen_loss -= oxygen_available
+            print(f"Slot {i}: Tank oxygen used: {oxygen_available}, Tank oxygen now: {item.oxygen}, Tank capacity: {item.oxygen_cap}")
+            if oxygen_loss <= 0:
+                break
 
-    player.oxygen = max(player.oxygen - OXYGEN_RATE + oxygen_from_tank, 0)
+    # Apply remaining oxygen loss to player
+    prev_oxygen = player.oxygen
+    player.oxygen = max(player.oxygen - oxygen_loss, 0)
+    print(f"Player oxygen: {prev_oxygen} -> {player.oxygen}, Oxygen loss applied: {oxygen_loss}, Tank oxygen used: {oxygen_from_tank}")
 
+    # Health effects
     if player.oxygen <= 0:
         player.health = max(player.health - HEALTH_RATE, 0)
+        print(f"Health decreased to {player.health} due to no oxygen")
 
     if player.hunger >= 100 or player.thirst <= 0:
         player.health = max(player.health - HEALTH_RATE, 0)
+        print(f"Health decreased to {player.health} due to hunger/thirst")
 
-    # Oxygen from nearby growing plants
-    current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y),
-                        None)
+    # Oxygen from plants
+    current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y), None)
     if current_plot and current_plot.planted_item and not current_plot.ready:
         plant_oxygen = current_plot.planted_item.oxypot / 60
+        prev_oxygen = player.oxygen
         player.oxygen = min(player.oxygen + plant_oxygen, 100)
+        print(f"Plant oxygen added: {plant_oxygen}, Player oxygen: {prev_oxygen} -> {player.oxygen}")
+        for i, (item, count) in enumerate(player.hotbar):
+            if item and isinstance(item, OxygenTank) and count > 0:
+                if abs(current_plot.x - player.x) < 50 and abs(current_plot.y - player.y) < 50:
+                    prev_tank_oxygen = item.oxygen
+                    item.add_oxygen(plant_oxygen)
+                    print(f"Slot {i}: Tank oxygen: {prev_tank_oxygen} -> {item.oxygen}, Capacity: {item.oxygen_cap}")
 
-        # Add oxygen to selected tank if near plant
-        if item and isinstance(item, OxygenTank):
-            if abs(current_plot.x - player.x) < 50 and abs(current_plot.y - player.y) < 50:
-                item.add_oxygen(plant_oxygen)
+    # Final state
+    print(f"Final player oxygen: {player.oxygen}")
 
 def update_oxygen_near_plants():
     for placed_tank in placed_oxygen_tanks:
