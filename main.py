@@ -165,7 +165,7 @@ while running:
     current_pos = (player.x, player.y)
     moving = current_pos != last_pos
     last_pos = current_pos
-
+    map_tile = map.get_tile(player.map_x, player.map_y)
     update_stats(player, moving, map_tile)
 
     player_pos = (int(player.x), int(player.y))
