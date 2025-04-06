@@ -126,7 +126,7 @@ player.add_item(potato)
 farm_plots = []
 for mx in range(map_size):
     for my in range(map_size):
-        if map.get_tile(mx, my) == "ore":  # Changed from "blank" to "ore"
+        if map.get_tile(mx, my) == "blank":  # Changed from "blank" to "ore"
             farm_plots.append(FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
 
 print(map_x)
