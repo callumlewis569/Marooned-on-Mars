@@ -28,31 +28,31 @@ class Shannon():
                     ]
 
         ores = [        
-                    {"name": "rustalon", "number": self.inventory["rustalon"]},
-                    {"name": "hexacron", "number": self.inventory["hexacron"]},
-                    {"name": "xerocite", "number": self.inventory["xerocite"]}
+                    {"name": "rustalon", "number": self.inventory.get("rustalon", 0)},
+                    {"name": "hexacron", "number": self.inventory.get("hexacron", 0)},
+                    {"name": "xerocite", "number": self.inventory.get("xerocite", 0)}
                     ]
 
         plants = [
-                    {"name": "basic potatoes", "number": self.inventory["basic_potatoes"], "satiation": 1, "oxypot":1},
-                    {"name": "mars potatoes", "number": self.inventory["mars_potatoes"], "satiation": 3, "oxypot":0},
-                    {"name": "tree potatoes", "number": self.inventory["tree_potatoes"], "satiation": 0, "oxypot":3}
+                    {"name": "basic potatoes", "number": self.inventory.get("basic_potatoes", 0), "satiation": 1, "oxypot":1},
+                    {"name": "mars potatoes", "number": self.inventory.get("mars_potatoes", 0), "satiation": 3, "oxypot":0},
+                    {"name": "tree potatoes", "number": self.inventory.get("tree_potatoes", 0), "satiation": 0, "oxypot":3}
                     ]
 
         radioactive = [
-                            {"name": "nytrazene", "number": self.inventory["nytrazene"]},
-                            {"name": "tatonium", "number": self.inventory["tatonium"]},
-                            {"name": "aetherium", "number": self.inventory["aetherium"]}
+                            {"name": "nytrazene", "number": self.inventory.get("nytrazene", 0)},
+                            {"name": "tatonium", "number": self.inventory.get("tatonium", 0)},
+                            {"name": "aetherium", "number": self.inventory.get("aetherium", 0)}
                             ]
 
         general = [
-                        {"name": "ice", "number": self.inventory["ice"]}
+                        {"name": "ice", "number": self.inventory.get("ice", 0)}
                         ]
 
         fuels = [
-                    {"name": "combustite", "number": self.inventory["combustite"], "energy": 30},
-                    {"name": "ionflux", "number": self.inventory["ionflux"], "energy": 60},
-                    {"name": "void ether", "number": self.inventory["void_ether"], "energy": 90}
+                    {"name": "combustite", "number": self.inventory.get("combustite", 0), "energy": 30},
+                    {"name": "ionflux", "number": self.inventory.get("ionflux", 0), "energy": 60},
+                    {"name": "void ether", "number": self.inventory.get("void_ether", 0), "energy": 90}
                     ]
 
         full_inventory = [ores, plants, radioactive, general, fuels]
@@ -67,7 +67,7 @@ class Shannon():
             name = "Astronaut",
             prompt='''You are a personal assistant on a mars spaceship called Shannon.
             Your main goal is to help us survive. The important thing is that you answer every question as informatively as possible
-            Check the statuses and inventory'''+ str(self.status)+ str(self.full_inventory)+ 
+            Check the statuses and inventory'''+ str(self.get_status()[0])+ str(self.get_status()[1])+ 
             '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
             Your first port of call to any not safe level is to see what can help in the inventory
             For low hunger and oxygen levels: check through plants. Find which ones you have that have the highest oxypot or satiation depending on if you need the plant for oxygen or for food. 
@@ -102,7 +102,7 @@ class Shannon():
             name = "Astronaut",
             prompt='''You are a personal assistant on a mars spaceship called Shannon.
             You asnwer our questions, though not very informatively, and you have creepy undertones that make it clear you aren't really on our side. Say weird/ creepy things every now and then.
-            Check the statuses and inventory'''+ str(self.status)+ str(self.full_inventory)+ 
+            Check the statuses and inventory'''+ str(self.get_status()[0])+ str(self.get_status()[1])+ 
             '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
             Your first port of call to any not safe level is to see what can help in the inventory
             For low hunger and oxygen levels: check through plants. Find which ones you have that have the highest oxypot or satiation depending on if you need the plant for oxygen or for food. 
@@ -136,7 +136,7 @@ class Shannon():
             name = "Astronaut",
             prompt='''You are a personal assistant on a mars spaceship called Shannon.
             You asnwer our questions, though rather reluctantly and are really creepy. You are evil.
-            Check the statuses and inventory'''+ str(self.status)+ str(self.full_inventory)+ 
+            Check the statuses and inventory'''+ str(self.get_status()[0])+ str(self.get_status()[1])+ 
             '''and tell me about whichever item in status is at the lowest current_level first, then tell me about any other statuses when prompted.
             Your first port of call to any not safe level is to see what can help in the inventory
             For low hunger and oxygen levels: check through plants. Find which ones you have that have the highest oxypot or satiation depending on if you need the plant for oxygen or for food. 
