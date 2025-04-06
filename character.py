@@ -23,7 +23,7 @@ class Character:
         self.inventory = {}
         self.inventory_cap = 10
         self.hotbar = [(None, 0)] * 9
-        self.selected_hotbar_slot = 0  # Currently selected slot (0-8)
+        self.selected_hotbar_slot = 0
 
     def move(self, map_width, map_height):
         keys = pygame.key.get_pressed()
@@ -47,6 +47,12 @@ class Character:
         elif self.y + 16 > map_height:
             self.y = map_height - 16
 
+    def inc_item(self, item):
+        try:
+            self.inventory[item] += 1
+        except KeyError:
+            self.inventory[item] = 1
+
     def add_ox(self, oxygen):
         self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
 
@@ -55,7 +61,7 @@ class Character:
         if isinstance(item, OxygenTank) or isinstance(item, PlacedOxygenTank):
             for i in range(len(self.hotbar)):
                 if self.hotbar[i][0] is None:
-                    self.hotbar[i] = (item, 1)  # Add the specific tank instance
+                    self.hotbar[i] = (item, 1)
                     return True
             return False
 

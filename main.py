@@ -122,10 +122,13 @@ player = Character(
 )
 
 player.hotbar[0] = (plants["Basic Potato"], 1)
+player.inc_item("basic_potato")
+print(player.inventory)
 potato_icon = pygame.image.load("assets/basic_potato.png").convert_alpha()
 potato_icon = pygame.transform.scale(potato_icon, (30, 30))
 
 player.hotbar[1] = (oxygen_tanks["Oxygen Tank A"], 1)
+
 oxygen_tank_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
 oxygen_tank_icon = pygame.transform.scale(oxygen_tank_icon, (30, 30))
 
@@ -276,7 +279,6 @@ def update_stats(player, moving=False, tile_type="blank"):
 
     oxygen_loss = OXYGEN_RATE
     oxygen_from_tank = 0
-    print(f"Initial oxygen_loss: {oxygen_loss}")
     
     # Check hotbar for oxygen tanks
     for i in range(len(player.hotbar)):
@@ -286,23 +288,19 @@ def update_stats(player, moving=False, tile_type="blank"):
             oxygen_from_tank += oxygen_available
             item.oxygen = max(item.oxygen - oxygen_available, 0)
             oxygen_loss -= oxygen_available
-            print(f"Slot {i}: Tank oxygen used: {oxygen_available}, Tank oxygen now: {item.oxygen}, Tank capacity: {item.oxygen_cap}")
             if oxygen_loss <= 0:
                 break
 
     # Apply remaining oxygen loss to player
     prev_oxygen = player.oxygen
     player.oxygen = max(player.oxygen - oxygen_loss, 0)
-    print(f"Player oxygen: {prev_oxygen} -> {player.oxygen}, Oxygen loss applied: {oxygen_loss}, Tank oxygen used: {oxygen_from_tank}")
 
     # Health effects
     if player.oxygen <= 0:
         player.health = max(player.health - HEALTH_RATE, 0)
-        print(f"Health decreased to {player.health} due to no oxygen")
 
     if player.hunger >= 100 or player.thirst <= 0:
         player.health = max(player.health - HEALTH_RATE, 0)
-        print(f"Health decreased to {player.health} due to hunger/thirst")
 
     # Oxygen from plants
     current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y), None)
