@@ -221,12 +221,12 @@ def draw_growth_bar(screen, plot):
         bar_width = 100
         bar_height = 10
 
-        bar_x, bar_y = plot.x, plot.y
-        pygame.draw.rect(screen, (50, 50, 50),
-                         (bar_x-50, bar_y, bar_width, bar_height))
-        fill_width = progress * bar_width
-        pygame.draw.rect(screen, (0, 255, 0), (bar_x-50,
-                         bar_y, fill_width, bar_height))
+        # bar_x, bar_y = plot.x, plot.y
+        # pygame.draw.rect(screen, (50, 50, 50),
+        #                  (bar_x-50, bar_y, bar_width, bar_height))
+        # fill_width = progress * bar_width
+        # pygame.draw.rect(screen, (0, 255, 0), (bar_x-50,
+        #                  bar_y, fill_width, bar_height))
 
 
 def get_exit_side(player_pos, center):
@@ -555,22 +555,24 @@ async def game_loop():
                     and (player.x < 280 and player.x > 235 and player.y > 272 and player.y < 292)):
                 inside_ship = True
 
-            tile_image = pygame.image.load(
-                "assets/ship_interior.png") if inside_ship else map.tile_images[(player.map_x, player.map_y)]
-            screen.blit(tile_image, (0, 0))
+            
 
             update_game()
-            update_stats(player)
+            if not inside_ship:
+                update_stats(player)
             update_oxygen_near_plants()
             update_game_time()
             draw_clock(screen)
+            tile_image = pygame.image.load(
+                "assets/ship_interior.png") if inside_ship else map.tile_images[(player.map_x, player.map_y)]
+            screen.blit(tile_image, (0, 0))
 
             # Draw farm plots (existing code)
             for plot in farm_plots:
                 if plot.map_x == player.map_x and plot.map_y == player.map_y:
                     color = (0, 255, 0) if plot.ready else (139, 69, 19)
-                    pygame.draw.rect(
-                        screen, color, (plot.x - 15, plot.y - 15, 30, 30))
+                    # pygame.draw.rect(
+                    #     screen, color, (plot.x - 15, plot.y - 15, 30, 30))
                     draw_growth_bar(screen, plot)
 
             # Draw only oxygen tanks on current map tile
