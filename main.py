@@ -2,6 +2,7 @@ import pygame
 import sys
 from character import Character
 from map import Map
+from item import *
 import math
 import time
 import random
@@ -13,6 +14,58 @@ pygame.init()
 WIDTH, HEIGHT = 500, 500
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Marooned on Mars")
+
+#Initialisation of Items:
+fuels = {
+    "Combustite": Fuel("Combustite",1,30,1),
+    "Ionflux": Fuel("Ionflux",1.5,60,4),
+    "Void Ether": Fuel("Void Ether",2,90,7)
+}
+
+ores = {
+    "Rustalon": Ore("Rustalon",1,1),
+    "Hexacron": Ore("Hexacron",1.5,4),
+    "Xerocite": Ore("Xerocite",2,7)
+}
+
+radioactives = {
+    "Nytrazine": Radioactive("Nytrazine",1,1,1),
+    "Tatonium": Radioactive("Tatonium",1.5,4,4),
+    "Aetherium-94": Radioactive("Aetherium-94",2,6,7)
+}
+
+plants = {
+    "Basic Potato": Plant("Basic Potato",0.5,1,1,1),
+    "Mars Potato": Plant("Mars Potato",1,3,0,0.5),
+    "Tree Potato": Plant("Tree Potato",1,0,3,0.5)
+}
+
+oxygen_tanks = {
+    "Oxygen Tank A": OxygenTank("Oxygen Tank A",1,100,100),
+    "Oxygen Tank B": OxygenTank("Oxygen Tank B",1,100,100)
+}
+
+drill_bits = [
+    DrillBit("Rustalon Drill Bit 1",1),
+    DrillBit("Rustalon Drill Bit 2",2),
+    DrillBit("Rustalon Drill Bit 3",3),
+    DrillBit("Hexacron Drill Bit 1",4),
+    DrillBit("Hexacron Drill Bit 2",5),
+    DrillBit("Hexacron Drill Bit 3",6),
+    DrillBit("Xerocite Drill Bit 1",7),
+    DrillBit("Xerocite Drill Bit 2",8),
+    DrillBit("Xerocite Drill Bit 3",9)
+]
+
+batteries = [
+    Battery("Potato Battery", 50),
+    Battery("Spark Unit",100),
+    Battery("Pulse Pak", 200),
+    Battery("Void Crystal", 300)
+]
+
+player_drill = Drill(batteries[0].battery,drill_bits[0].drill_bit)
+
 
 clock = pygame.time.Clock()
 
@@ -75,6 +128,7 @@ for mx in range(map_size):
     for my in range(map_size):
         if map.get_tile(mx, my) == "blank":  # Changed from "blank" to "ore"
             farm_plots.append(FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
+
 print(map_x)
 print(map_y)
 
@@ -223,7 +277,7 @@ while running:
     inv_text = "Inventory: " + ", ".join(f"{k}: {v}" for k, v in player.inventory.items())
     inv_surface = font.render(inv_text, True, (255, 255, 255))
     screen.blit(inv_surface, (10, HEIGHT - 70))
-    
+
     current_pos = (player.x, player.y)
     moving = current_pos != last_pos
     last_pos = current_pos
