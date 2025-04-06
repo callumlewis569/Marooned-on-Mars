@@ -233,10 +233,12 @@ last_pos = (player.x, player.y)
 current_page = 0
 pages = ["menu", "location", "game"]
 seedxy = []
+inside_ship = False
 
 page_change_flag = False
 page_change_time = 0
 delay_duration = 0.5
+
 
 def change_page():
     global current_page
@@ -249,13 +251,13 @@ def change_page():
 while running:
     # Get all events once per frame
     events = pygame.event.get()
-    
+
     # Check for quit event in all pages
     for event in events:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-    
+
     # Handle current page
     if pages[current_page] == "menu":
         button_width = 300
@@ -284,7 +286,7 @@ while running:
 
         # Update widgets with the events we already collected
         pygame_widgets.update(events)
-        
+
     elif pages[current_page] == "location":
         screen.fill(0)
         mars = pygame.image.load("assets/mars.png")
@@ -293,21 +295,23 @@ while running:
         if seedxy:
             cross = pygame.image.load("assets/cross.png")
             screen.blit(cross, (seedxy[0] - 10.5, seedxy[1] - 10.5))
-            
+
             # Create a confirmation button
             button_width = 150
             button_height = 50
             button_x = WIDTH - button_width - 20
             button_y = HEIGHT - button_height - 20
-            
+
             # Draw the button
-            pygame.draw.rect(screen, (0, 200, 0), (button_x, button_y, button_width, button_height), 0, 10)
-            
+            pygame.draw.rect(screen, (0, 200, 0), (button_x,
+                             button_y, button_width, button_height), 0, 10)
+
             # Draw button text
             confirm_text = font.render("Confirm", True, (255, 255, 255))
-            text_rect = confirm_text.get_rect(center=(button_x + button_width/2, button_y + button_height/2))
+            text_rect = confirm_text.get_rect(
+                center=(button_x + button_width/2, button_y + button_height/2))
             screen.blit(confirm_text, text_rect)
-            
+
             # Check if the confirm button is clicked
             for event in events:
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -323,8 +327,9 @@ while running:
                         for mx in range(map_size):
                             for my in range(map_size):
                                 if map.get_tile(mx, my) == "blank":
-                                    farm_plots.append(FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
-                        
+                                    farm_plots.append(
+                                        FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
+
                         change_page()
                         page_change_flag = False
 
@@ -339,7 +344,7 @@ while running:
                     if clicked_pixel.a > 0:
                         seedxy = [x, y]
                         # No longer setting page_change_flag here since we're using the confirm button
-                    
+
     elif pages[current_page] == "game":
         for event in events:
             if event.type == pygame.KEYDOWN:
@@ -365,7 +370,11 @@ while running:
 
         screen.fill(0)
 
-        tile_image = map.tile_images[(player.map_x, player.map_y)]
+        if ((player.map_x == map_size // 2 and player.map_y == map_size // 2)
+             and (player.x < 280 and player.x > 235 and player.y > 272 and player.y < 292)):
+            inside_ship = True
+
+        tile_image = pygame.image.load("assets/ship_interior.png") if inside_ship else map.tile_images[(player.map_x, player.map_y)]
         screen.blit(tile_image, (0, 0))
 
         current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y),
