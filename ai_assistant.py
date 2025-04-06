@@ -79,7 +79,7 @@ class Shannon():
             To make a mars or tree potato we need 20 basic potatoes and 15 tatonium.
             When prompted, state if we are able to make one by fetching that information from radioactive and plants, and if not what we have left that we need.
             All levels are percentages, so treat them as such. When prompted for more information about another item provide all the details you have. Dont wait for prompts''',
-            greeting='Would you like me to tell you your next course of action?'
+            greeting='Would you like me to tell you about your statuses, inventory or the next course of action?'
         ).data['agent_id']
 
         # All additional keyword arguments (such as `agent_id`) are passed as
