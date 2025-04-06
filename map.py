@@ -45,6 +45,8 @@ class Map():
 
                 self.map[y][x] = tile
 
+        self.map[size // 2][size // 2] = 'ship'
+
         for x in range(size):
             for y in range(size):
                 tile_type = self.get_tile(x, y)

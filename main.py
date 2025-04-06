@@ -30,7 +30,13 @@ map_key = {
         pygame.image.load("assets/tile_6.png").convert_alpha()
     ],
     'cave': [pygame.image.load("assets/tile_3.png").convert_alpha()],
-    'ore': [pygame.image.load("assets/tile_4.png").convert_alpha()]
+    'ore': [
+        pygame.image.load("assets/tile_1.png").convert_alpha(),
+        pygame.image.load("assets/tile_5.png").convert_alpha(),
+        pygame.image.load("assets/tile_7.png").convert_alpha(),
+        pygame.image.load("assets/tile_8.png").convert_alpha()
+    ],
+    'ship': [pygame.image.load("assets/tile_4.png").convert_alpha()]
 }
 
 map = Map(map_size, 0, map_key)
