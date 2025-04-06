@@ -94,8 +94,8 @@ map_key = {
     'ship': [pygame.image.load("assets/tile_4.png").convert_alpha()]
 }
 
-player_x = WIDTH / 2
-player_y = HEIGHT / 2
+player_x = 206
+player_y = 296
 map_x = map_size // 2
 map_y = map_size // 2
 player_speed = 1
@@ -290,9 +290,47 @@ while running:
         mars = pygame.image.load("assets/mars.png")
         screen.blit(mars, (0, 0))
 
-        # Check for mouse click
+        if seedxy:
+            cross = pygame.image.load("assets/cross.png")
+            screen.blit(cross, (seedxy[0] - 10.5, seedxy[1] - 10.5))
+            
+            # Create a confirmation button
+            button_width = 150
+            button_height = 50
+            button_x = WIDTH - button_width - 20
+            button_y = HEIGHT - button_height - 20
+            
+            # Draw the button
+            pygame.draw.rect(screen, (0, 200, 0), (button_x, button_y, button_width, button_height), 0, 10)
+            
+            # Draw button text
+            confirm_text = font.render("Confirm", True, (255, 255, 255))
+            text_rect = confirm_text.get_rect(center=(button_x + button_width/2, button_y + button_height/2))
+            screen.blit(confirm_text, text_rect)
+            
+            # Check if the confirm button is clicked
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if button_x <= mouse_pos[0] <= button_x + button_width and button_y <= mouse_pos[1] <= button_y + button_height:
+                        # Initialize game with the selected seed
+                        x, y = seedxy
+                        seed = random.seed(int(str(x) + str(y)))
+                        map = Map(map_size, seed, map_key)
+                        map.display_map()
+
+                        farm_plots = []
+                        for mx in range(map_size):
+                            for my in range(map_size):
+                                if map.get_tile(mx, my) == "blank":
+                                    farm_plots.append(FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
+                        
+                        change_page()
+                        page_change_flag = False
+
+        # Handle new clicks on the map
         for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN and not page_change_flag:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
                 print(x, y)
                 mars_rect = mars.get_rect()
@@ -300,24 +338,7 @@ while running:
                     clicked_pixel = mars.get_at((x, y))
                     if clicked_pixel.a > 0:
                         seedxy = [x, y]
-                        page_change_flag = True
-                        page_change_time = time.time()
-
-        # Wait for mouse button release
-        if page_change_flag:
-            if pygame.mouse.get_pressed()[0] == 0:
-                if time.time() - page_change_time >= delay_duration:
-                    seed = random.seed(int(str(x) + str(y)))
-                    map = Map(map_size, seed, map_key)
-                    map.display_map()
-
-                    farm_plots = []
-                    for mx in range(map_size):
-                        for my in range(map_size):
-                            if map.get_tile(mx, my) == "blank":  # Changed from "blank" to "ore"
-                                farm_plots.append(FarmPlot(WIDTH/2, HEIGHT/2, mx, my))
-                    change_page()
-                    page_change_flag = False
+                        # No longer setting page_change_flag here since we're using the confirm button
                     
     elif pages[current_page] == "game":
         for event in events:
@@ -380,11 +401,12 @@ while running:
         player_pos = (int(player.x), int(player.y))
         if diamond_mask.get_at(player_pos):
             player.move(WIDTH, HEIGHT)
+            print(player.x, player.y)
         else:
             exit_side = get_exit_side(player_pos, diamond_center)
 
             if exit_side == "top-right":
-                if player.map_y < map_size:
+                if player.map_y < map_size - 1:
                     player.map_y += 1
                     player.x = 150
                     player.y = 324
@@ -392,7 +414,7 @@ while running:
                     player.x -= 1
                     player.y += 1
             elif exit_side == "bottom-right":
-                if player.map_x < map_size:
+                if player.map_x < map_size - 1:
                     player.map_x += 1
                     player.x = 177
                     player.y = 195
