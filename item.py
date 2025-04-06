@@ -3,6 +3,12 @@ class Item():
         self.name = item_name
         self.weight = item_weight
 
+class Fuel(Item):
+    def __init__(self, item_name, item_weight, energy, mining_lvl):
+        super().__init__(item_name, item_weight)
+        self.energy = energy
+        self.mining_lvl = mining_lvl
+
 class Ore(Item):
     def __init__(self, item_name, item_weight, mining_lvl):
         super().__init__(item_name, item_weight)

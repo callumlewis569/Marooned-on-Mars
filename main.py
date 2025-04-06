@@ -2,6 +2,7 @@ import pygame
 import sys
 from character import Character
 from map import Map
+from item import *
 import math
 import time
 import random
@@ -11,6 +12,30 @@ pygame.init()
 WIDTH, HEIGHT = 500, 500
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Marooned on Mars")
+
+#Initialisation of Items:
+fuels = {
+    "Combustite": Fuel("Combustite",1,30,1),
+    "Ionflux": Fuel("Ionflux",1.5,60,4),
+    "Void Ether": Fuel("Void Ether",2,90,7)
+}
+
+ores = {
+    "Rustalon": Ore("Rustalon",1,1),
+    "Hexacron": Ore("Hexacron",1.5,4),
+    "Xerocite": Ore("Xerocite",2,7)
+}
+
+radioactives = {
+    
+}
+
+plants = {
+    "Basic Potato": Plant("Basic Potato",0.5,1,1,1),
+    "Mars Potato": Plant("Mars Potato",1,3,0,0.5),
+    "Tree Potato": Plant("Tree Potato",1,0,3,0.5)
+}
+
 
 clock = pygame.time.Clock()
 
