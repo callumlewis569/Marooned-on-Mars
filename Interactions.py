@@ -17,7 +17,6 @@ class PlacedOxygenTank(OxygenTank):
         text = font.render(oxygen_text, True, (255, 255, 255))
         screen.blit(self.image, (self.x, self.y))
         screen.blit(text, (self.x, self.y - 20))
-
 class FarmPlot:
     def __init__(self, x, y, map_x, map_y):
         self.x = x
@@ -29,7 +28,7 @@ class FarmPlot:
         self.ready = False
 
     def plant(self, item):
-        if self.planted_item is None and isinstance(item, Plant):
+        if isinstance(item, Plant) and not self.planted_item:
             self.planted_item = item
             self.plant_time = time.time()
             self.ready = False
@@ -37,10 +36,10 @@ class FarmPlot:
         return False
 
     def check_harvest(self):
-        if self.planted_item and not self.ready:
-            if time.time() - self.plant_time >= self.planted_item.grow_rate:
-                self.ready = True
-        return self.ready
+        if self.planted_item and time.time() - self.plant_time >= self.planted_item.grow_rate:
+            self.ready = True
+            return True
+        return False
 
     def harvest(self):
         if self.ready:

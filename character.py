@@ -1,7 +1,8 @@
 import pygame
 from item import *
 from Interactions import PlacedOxygenTank
-class Character():
+
+class Character:
     def __init__(self, x, y, map_x, map_y, speed, hunger, thirst, fuel, oxygen, health):
         self.image = pygame.image.load("assets/character.png")
         self.x = x
@@ -61,6 +62,9 @@ class Character():
         # Original stacking logic for other items
         for i in range(len(self.hotbar)):
             current_item, count = self.hotbar[i]
+            # Skip tanks in stacking logic
+            if isinstance(current_item, (OxygenTank, PlacedOxygenTank)):
+                continue
             if current_item and current_item.name == item.name:
                 self.hotbar[i] = (current_item, count + 1)
                 return True
@@ -73,17 +77,21 @@ class Character():
             self.inventory[item.name] = self.inventory.get(item.name, 0) + 1
             return True
         return False
+
     def remove_item(self, slot):
-        # Decrease count in selected slot, remove if count reaches 0
+        """Remove an item from the specified hotbar slot."""
+        if not (0 <= slot < len(self.hotbar)):
+            return False  # Invalid slot
+
         item, count = self.hotbar[slot]
         if item and count > 0:
             count -= 1
             if count == 0:
-                self.hotbar[slot] = (None, 0)
+                self.hotbar[slot] = (None, 0)  # Clear the slot if count reaches 0
             else:
-                self.hotbar[slot] = (item, count)
+                self.hotbar[slot] = (item, count)  # Update with reduced count
             return True
-        return False
+        return False  # No item to remove
 
     def select_hotbar(self, slot):
         if 0 <= slot <= 8:
