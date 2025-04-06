@@ -37,7 +37,6 @@ radioactives = {
 }
 
 plants = {
-<<<<<<< HEAD
     "Basic Potato": Plant("Basic Potato",0.5,20,5,30),
     "Mars Potato": Plant("Mars Potato",1,30,5,60),
     "Tree Potato": Plant("Tree Potato",1,0,10,60)
@@ -46,16 +45,6 @@ plants = {
 oxygen_tanks = {
     "Oxygen Tank A": OxygenTank("Oxygen Tank A",1,0),
     "Oxygen Tank B": OxygenTank("Oxygen Tank B",1,100)
-=======
-    "Basic Potato": Plant("Basic Potato", 0.5, 1, 1, 1),
-    "Mars Potato": Plant("Mars Potato", 1, 3, 0, 0.5),
-    "Tree Potato": Plant("Tree Potato", 1, 0, 3, 0.5)
-}
-
-oxygen_tanks = {
-    "Oxygen Tank A": OxygenTank("Oxygen Tank A", 1, 100, 100),
-    "Oxygen Tank B": OxygenTank("Oxygen Tank B", 1, 100, 100)
->>>>>>> a6e90230f569a28c831b38c7557f901a5423c20a
 }
 
 drill_bits = [
@@ -137,15 +126,9 @@ player.hotbar[1] = (oxygen_tanks["Oxygen Tank A"], 1)
 oxygen_tank_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
 oxygen_tank_icon = pygame.transform.scale(oxygen_tank_icon, (30, 30))
 
-<<<<<<< HEAD
 farm_plots = []
 placed_oxygen_tanks = []
 
-print(map_x)
-print(map_y)
-
-=======
->>>>>>> a6e90230f569a28c831b38c7557f901a5423c20a
 # Display text
 health_icon = pygame.image.load("assets/heart.png").convert_alpha()
 thirst_icon = pygame.image.load("assets/WaterDroplet.png").convert_alpha()
@@ -195,7 +178,6 @@ HEALTH_RATE = 0.01
 
 font = pygame.font.Font(None, 24)
 
-<<<<<<< HEAD
 start_ticks = pygame.time.get_ticks()  # Start time for clock
 hour = 0
 day = 1
@@ -233,8 +215,6 @@ def draw_growth_bar(screen, plot):
         pygame.draw.rect(screen, (50, 50, 50), (bar_x-50, bar_y, bar_width, bar_height))
         fill_width = progress * bar_width
         pygame.draw.rect(screen, (0, 255, 0), (bar_x-50, bar_y, fill_width, bar_height))
-=======
->>>>>>> a6e90230f569a28c831b38c7557f901a5423c20a
 
 def get_exit_side(player_pos, center):
     dx = player_pos[0] - center[0]
@@ -252,7 +232,6 @@ def get_exit_side(player_pos, center):
     else:
         return "bottom-right"
 
-<<<<<<< HEAD
 def draw_hotbar(screen, player, font):
     for i in range(9):
         x = HOTBAR_X + (i * HOTBAR_SLOT_SIZE)
@@ -271,19 +250,6 @@ def draw_hotbar(screen, player, font):
                     count_text = font.render(str(count), True, (255, 255, 255))
                     screen.blit(count_text, (x + 25, HOTBAR_Y + 25))
 
-=======
-
-def draw_hotbar(screen, player):
-    for i in range(9):
-        x = HOTBAR_X + (i * HOTBAR_SLOT_SIZE)
-        color = (100, 100, 100) if i != player.selected_hotbar_slot else (
-            200, 200, 200)
-        pygame.draw.rect(screen, color, (x, HOTBAR_Y,
-                         HOTBAR_SLOT_SIZE, HOTBAR_SLOT_SIZE))
-        if player.hotbar[i]:
-            text = font.render(player.hotbar[i].name[0], True, (255, 255, 255))
-            screen.blit(text, (x + 10, HOTBAR_Y + 10))
->>>>>>> a6e90230f569a28c831b38c7557f901a5423c20a
 
 
 def draw_stat_bar(screen, icon, value, max_value, x, y, color):
@@ -313,7 +279,6 @@ def update_stats(player, moving=False, tile_type="blank"):
     if player.hunger >= 100 or player.thirst <= 0:
         player.health = max(player.health - HEALTH_RATE, 0)
 
-<<<<<<< HEAD
     # Oxygen from nearby growing plants
     current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y),
                         None)
@@ -346,11 +311,6 @@ def update_game():
 # Game loop
 last_pos = (player.x, player.y)
 running = True
-=======
-
-# Game Loop
-running = True
-last_pos = (player.x, player.y)
 
 current_page = 0
 pages = ["menu", "location", "game"]
@@ -370,7 +330,6 @@ def change_page():
     print(f"Changed to page: {pages[current_page]}")
 
 
->>>>>>> a6e90230f569a28c831b38c7557f901a5423c20a
 while running:
     # Get all events once per frame
     events = pygame.event.get()
@@ -380,7 +339,6 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-<<<<<<< HEAD
 
         elif event.type == pygame.KEYDOWN:
             if pygame.K_1 <= event.key <= pygame.K_9:
@@ -428,34 +386,7 @@ while running:
                                 player.add_item(new_plant)
                             farm_plots.remove(plot)
 
-    screen.fill(0)
-    update_game()
-    update_stats(player)
-    update_oxygen_near_plants()
-    update_game_time()
-    draw_clock(screen)
-    tile_image = map.tile_images[(player.map_x, player.map_y)]
-    screen.blit(tile_image, (0, 0))
-
-    # Draw farm plots (existing code)
-    for plot in farm_plots:
-        if plot.map_x == player.map_x and plot.map_y == player.map_y:
-            color = (0, 255, 0) if plot.ready else (139, 69, 19)
-            pygame.draw.rect(screen, color, (plot.x - 15, plot.y - 15, 30, 30))
-            draw_growth_bar(screen, plot)
-
-    # Draw only oxygen tanks on current map tile
-    for tank in placed_oxygen_tanks:
-        if tank.map_x == player.map_x and tank.map_y == player.map_y:
-            tank.draw(screen, font)
-    screen.blit(player.image, (player.x, player.y))
-
-    draw_stat_bar(screen, health_icon, player.health, 100, bar_x, bar_y_offset, (255, 0, 0))
-    draw_stat_bar(screen, thirst_icon, player.thirst, 100, bar_x, bar_y_offset + 20, (0, 0, 255))
-    draw_stat_bar(screen, fuel_icon, player.fuel, 100, bar_x, bar_y_offset + 40, (255, 255, 0))
-    draw_stat_bar(screen, oxygen_icon, player.oxygen, 100, bar_x, bar_y_offset + 60, (0, 255, 0))
-    draw_hotbar(screen, player, font)
-=======
+    
 
     # Handle current page
     if pages[current_page] == "menu":
@@ -494,7 +425,6 @@ while running:
         if seedxy:
             cross = pygame.image.load("assets/cross.png")
             screen.blit(cross, (seedxy[0] - 10.5, seedxy[1] - 10.5))
->>>>>>> a6e90230f569a28c831b38c7557f901a5423c20a
 
             # Create a confirmation button
             button_width = 150
@@ -537,7 +467,6 @@ while running:
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
-                print(x, y)
                 mars_rect = mars.get_rect()
                 if mars_rect.collidepoint(x, y):
                     clicked_pixel = mars.get_at((x, y))
@@ -577,6 +506,33 @@ while running:
         tile_image = pygame.image.load("assets/ship_interior.png") if inside_ship else map.tile_images[(player.map_x, player.map_y)]
         screen.blit(tile_image, (0, 0))
 
+        update_game()
+        update_stats(player)
+        update_oxygen_near_plants()
+        update_game_time()
+        draw_clock(screen)
+        tile_image = map.tile_images[(player.map_x, player.map_y)]
+        screen.blit(tile_image, (0, 0))
+
+        # Draw farm plots (existing code)
+        for plot in farm_plots:
+            if plot.map_x == player.map_x and plot.map_y == player.map_y:
+                color = (0, 255, 0) if plot.ready else (139, 69, 19)
+                pygame.draw.rect(screen, color, (plot.x - 15, plot.y - 15, 30, 30))
+                draw_growth_bar(screen, plot)
+
+        # Draw only oxygen tanks on current map tile
+        for tank in placed_oxygen_tanks:
+            if tank.map_x == player.map_x and tank.map_y == player.map_y:
+                tank.draw(screen, font)
+        screen.blit(player.image, (player.x, player.y))
+
+        draw_stat_bar(screen, health_icon, player.health, 100, bar_x, bar_y_offset, (255, 0, 0))
+        draw_stat_bar(screen, thirst_icon, player.thirst, 100, bar_x, bar_y_offset + 20, (0, 0, 255))
+        draw_stat_bar(screen, fuel_icon, player.fuel, 100, bar_x, bar_y_offset + 40, (255, 255, 0))
+        draw_stat_bar(screen, oxygen_icon, player.oxygen, 100, bar_x, bar_y_offset + 60, (0, 255, 0))
+        draw_hotbar(screen, player, font)
+
         current_plot = next((plot for plot in farm_plots if plot.map_x == player.map_x and plot.map_y == player.map_y),
                             None)
         if current_plot and current_plot.planted_item:
@@ -594,7 +550,7 @@ while running:
                       bar_x, bar_y_offset + 40, (255, 255, 0))
         draw_stat_bar(screen, oxygen_icon, player.oxygen, 100,
                       bar_x, bar_y_offset + 60, (0, 255, 0))
-        draw_hotbar(screen, player)
+        draw_hotbar(screen, player, font)
 
         inv_text = "Inventory: " + \
             ", ".join(f"{k}: {v}" for k, v in player.inventory.items())
@@ -610,7 +566,6 @@ while running:
         player_pos = (int(player.x), int(player.y))
         if diamond_mask.get_at(player_pos):
             player.move(WIDTH, HEIGHT)
-            print(player.x, player.y)
         else:
             exit_side = get_exit_side(player_pos, diamond_center)
 
@@ -647,7 +602,6 @@ while running:
                     player.x += 1
                     player.y += 1
 
-            print(player.map_x, player.map_y)
 
         if player.health <= 0:
             print("Game Over: You died!")
