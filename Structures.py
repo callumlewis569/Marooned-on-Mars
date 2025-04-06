@@ -13,7 +13,13 @@ class Mines():
             return mining
         
 class Farm():
-    def __init__(self, plant_name, oxypot, grow_rate):
+    def __init__(self, plant_name, oxypot, grow_rate, rad = 0):
         self.plant = plant_name
         self.oxypot = oxypot
         self.grow_rate = grow_rate
+        self.rad = rad
+
+    def add_rad(self, rad):
+        self.rad += rad
+
+
