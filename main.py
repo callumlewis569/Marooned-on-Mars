@@ -4,6 +4,7 @@ from character import Character
 from map import Map
 import math
 import time
+import random
 
 # Initialisation
 pygame.init()
@@ -15,16 +16,23 @@ clock = pygame.time.Clock()
 
 # Set initial player and map features
 map_size = 10
-map = Map(map_size, 0)
-
 map_key = {
-    'blank': pygame.image.load("assets/tile_1.png").convert_alpha(),
-    'mountain': pygame.image.load("assets/tile_2.png").convert_alpha(),
-    'cave': pygame.image.load("assets/tile_3.png").convert_alpha(),
-    'ore': pygame.image.load("assets/tile_4.png").convert_alpha()
+    'blank': [
+        pygame.image.load("assets/tile_1.png").convert_alpha(),
+        pygame.image.load("assets/tile_5.png").convert_alpha(),
+        pygame.image.load("assets/tile_7.png").convert_alpha(),
+        pygame.image.load("assets/tile_8.png").convert_alpha()
+    ],
+    'mountain': [
+        pygame.image.load("assets/tile_2.png").convert_alpha(),
+        pygame.image.load("assets/tile_6.png").convert_alpha()
+    ],
+    'cave': [pygame.image.load("assets/tile_3.png").convert_alpha()],
+    'ore': [pygame.image.load("assets/tile_4.png").convert_alpha()]
 }
 
-map.print_map()
+map = Map(map_size, 0, map_key)
+map.display_map()
 
 player_x = WIDTH / 2
 player_y = HEIGHT / 2
@@ -110,8 +118,8 @@ while running:
 
     screen.fill(0)
 
-    map_tile = map.get_tile(player.map_x, player.map_y)
-    screen.blit(map_key[map_tile], (0, 0))
+    tile_image = map.tile_images[(player.map_x, player.map_y)]
+    screen.blit(tile_image, (0, 0))
     screen.blit(player.image, (player.x, player.y))
     screen.blit(hunger_text, (10, 0))
     screen.blit(thirst_text, (10, 20))
