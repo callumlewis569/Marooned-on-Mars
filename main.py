@@ -167,9 +167,10 @@ player.add_item(item.plants["Basic Potato"])
 player.add_item(item.plants["Basic Potato"])
 
 player.add_item(item.plants["Mars Potato"])
-oxygen_tank_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
-oxygen_tank_icon = pygame.transform.scale(oxygen_tank_icon, (30, 30))
 player.add_item(item.oxygen_tanks["Oxygen Tank A"])
+player.add_item(item.plants["Tree Potato"])
+player.add_item(item.oxygen_tanks["Oxygen Tank B"])
+player.add_item(item.radioactives["Nytrazine"])
 
 def draw_inventory(screen, player, font):
     for slot in range(player.inventory_cap):
@@ -182,16 +183,18 @@ def draw_inventory(screen, player, font):
         item, count = player.inventory[slot]
         if item:
             if isinstance(item, OxygenTank): #right now it only displays when item is instance of
-                screen.blit(oxygen_tank_icon, (x + 5, INVENTORY_Y + 5))
+                screen.blit(item.icon , (x + 5, INVENTORY_Y + 5))
                 oxygen_text = f"{int(item.oxygen)}/{item.oxygen_cap}" # shows the oxygen levels
                 text = font.render(oxygen_text, True, (255, 255, 255))
                 screen.blit(text, (x + 5, INVENTORY_Y + 20))
-            elif isinstance(item, Plant):
-                if item.icon:
-                    screen.blit(item.icon, (x + 5, INVENTORY_Y + 5))
+            elif item.icon:
+                screen.blit(item.icon, (x + 5, INVENTORY_Y + 5))
             if count > 1:
                 count_text = font.render(str(count), True, (255, 255, 255))
                 screen.blit(count_text, (x + 25, INVENTORY_Y + 25))
+
+
+
 
 def draw_stat_bar(screen, icon, value, max_value, x, y, color):
     screen.blit(icon, (x - 25, y - 5))
