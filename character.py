@@ -57,27 +57,6 @@ class Character:
         self.oxygen = min(self.oxygen + oxygen, self.oxygen_cap)
 
     def add_item(self, item):
-        # Handle OxygenTank separately
-        if isinstance(item, OxygenTank) or isinstance(item, PlacedOxygenTank):
-            for i in range(len(self.hotbar)):
-                if self.hotbar[i][0] is None:
-                    self.hotbar[i] = (item, 1)
-                    return True
-            return False
-
-        # Original stacking logic for other items
-        for i in range(len(self.hotbar)):
-            current_item, count = self.hotbar[i]
-            # Skip tanks in stacking logic
-            if isinstance(current_item, (OxygenTank, PlacedOxygenTank)):
-                continue
-            if current_item and current_item.name == item.name:
-                self.hotbar[i] = (current_item, count + 1)
-                return True
-            elif current_item is None:
-                self.hotbar[i] = (item, 1)
-                return True
-
         inventory_size = sum(self.inventory.get(i, 0) for i in self.inventory)
         if inventory_size < self.inventory_cap:
             self.inventory[item.name] = self.inventory.get(item.name, 0) + 1
