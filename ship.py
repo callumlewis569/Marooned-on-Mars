@@ -4,6 +4,15 @@ class Ship():
         self.oxygen_cap = oxygen_cap
         self.fuel = fuel
         self.fuel_cap = fuel_cap 
+        self.inventory = {}
+
+    def add_inventory(self, item):
+        for i in self.inventory:
+            if (i == item):
+                self.inventory[i] += 1
+                return True
+        self.inventory += {item, 1}
+        
 
     def add_fuel(self, fuel):
         self.fuel = min(self.fuel+fuel,self.fuel_cap)

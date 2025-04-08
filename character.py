@@ -22,8 +22,7 @@ class Character:
         self.health_cap = 100
         self.inventory = {}
         self.inventory_cap = 10
-        self.hotbar = [(None, 0)] * 9
-        self.selected_hotbar_slot = 0
+        
 
     def move(self, map_width, map_height):
         keys = pygame.key.get_pressed()
@@ -59,7 +58,7 @@ class Character:
     def add_item(self, item):
         inventory_size = sum(self.inventory.get(i, 0) for i in self.inventory)
         if inventory_size < self.inventory_cap:
-            self.inventory[item.name] = self.inventory.get(item.name, 0) + 1
+            self.inventory[item] = self.inventory.get(item, 0) + 1
             return True
         return False
 

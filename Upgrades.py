@@ -1,3 +1,4 @@
+#Upgrades Files used to define the upgrade pathways
 from Achievements import *
 
 cost_drillbits = [

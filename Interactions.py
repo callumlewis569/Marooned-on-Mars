@@ -17,6 +17,7 @@ class PlacedOxygenTank(OxygenTank):
         text = font.render(oxygen_text, True, (255, 255, 255))
         screen.blit(self.image, (self.x, self.y))
         screen.blit(text, (self.x, self.y - 20))
+
 class FarmPlot:
     def __init__(self, x, y, map_x, map_y):
         self.x = x
