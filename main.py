@@ -7,7 +7,7 @@ import math
 import time
 import random
 from Interactions import FarmPlot, PlacedOxygenTank
-from item import Plant
+from item import Plant, OxygenTank
 import pygame_widgets
 from pygame_widgets.button import Button
 from ai_assistant import Shannon
@@ -23,7 +23,6 @@ pygame.display.set_caption("Marooned on Mars")
 clock = pygame.time.Clock()
 
 # Set initial player and map features
-HOTBAR_SLOT_SIZE = 40
 map_size = 10
 map_key = {
     'blank': [
@@ -91,8 +90,6 @@ bar_height = 10
 bar_x = 40  # X position after the icon
 bar_y_offset = 10  # Spacing between bars
 
-HOTBAR_X = (WIDTH - (HOTBAR_SLOT_SIZE * 9)) // 2
-HOTBAR_Y = HEIGHT - HOTBAR_SLOT_SIZE - 10
 
 # Define tile borders
 x = WIDTH // 2
@@ -161,6 +158,40 @@ def get_exit_side(player_pos, center):
         return "bottom-left"
     else:
         return "bottom-right"
+
+INVENTORY_SLOT_SIZE = 40
+INVENTORY_Y = HEIGHT - INVENTORY_SLOT_SIZE - 10
+INVENTORY_X = (WIDTH - (INVENTORY_SLOT_SIZE * 9)) // 2
+
+player.add_item(item.plants["Basic Potato"])
+player.add_item(item.plants["Basic Potato"])
+
+player.add_item(item.plants["Mars Potato"])
+oxygen_tank_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
+oxygen_tank_icon = pygame.transform.scale(oxygen_tank_icon, (30, 30))
+player.add_item(item.oxygen_tanks["Oxygen Tank A"])
+
+def draw_inventory(screen, player, font):
+    for slot in range(player.inventory_cap):
+        x = INVENTORY_SLOT_SIZE + (slot * INVENTORY_SLOT_SIZE)
+        color = (150, 150, 150) if slot != player.selected_inventory_slot else (255, 255, 255) # highlights inventroy slot
+        pygame.draw.rect(screen, color, (x, INVENTORY_Y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE), 2)
+        pygame.draw.rect(screen, (50, 50, 50), (x + 2, INVENTORY_Y + 2, INVENTORY_SLOT_SIZE - 4, INVENTORY_SLOT_SIZE - 4))
+        # makes it so that there are boarders around the slot
+        # takes item and the number of that item v
+        item, count = player.inventory[slot]
+        if item:
+            if isinstance(item, OxygenTank): #right now it only displays when item is instance of
+                screen.blit(oxygen_tank_icon, (x + 5, INVENTORY_Y + 5))
+                oxygen_text = f"{int(item.oxygen)}/{item.oxygen_cap}" # shows the oxygen levels
+                text = font.render(oxygen_text, True, (255, 255, 255))
+                screen.blit(text, (x + 5, INVENTORY_Y + 20))
+            elif isinstance(item, Plant):
+                if item.icon:
+                    screen.blit(item.icon, (x + 5, INVENTORY_Y + 5))
+            if count > 1:
+                count_text = font.render(str(count), True, (255, 255, 255))
+                screen.blit(count_text, (x + 25, INVENTORY_Y + 25))
 
 def draw_stat_bar(screen, icon, value, max_value, x, y, color):
     screen.blit(icon, (x - 25, y - 5))
@@ -306,6 +337,11 @@ async def game_loop():
                         agent_task.cancel()  # Cancel the agent task
                         inside_ship = False
 
+                    elif event.type == pygame.KEYDOWN: # added it so you can scroll through the inventory
+                        if pygame.K_1 <= event.key <= pygame.K_9:
+                            player.select_inventory(event.key - pygame.K_1)
+                            print(player.select_inventory(event.key - pygame.K_1)) # prints whats in your current hand
+                            print(player.inventory) # shows full inventory
             screen.fill(0)
 
             if inside_ship:
@@ -352,18 +388,9 @@ async def game_loop():
                           bar_x, bar_y_offset + 60, (0, 255, 0))
             draw_stat_bar(screen, food_icon, player.hunger, 100,
                           bar_x, bar_y_offset + 80, (120, 0, 0))
-            # draw_hotbar(screen, player, font)
+            draw_inventory(screen, player, font)
 
             screen.blit(player.image, (player.x, player.y))
-
-            draw_stat_bar(screen, health_icon, player.health,
-                          100, bar_x, bar_y_offset, (255, 0, 0))
-            draw_stat_bar(screen, thirst_icon, player.thirst, 100,
-                          bar_x, bar_y_offset + 20, (0, 0, 255))
-            draw_stat_bar(screen, fuel_icon, player.fuel, 100,
-                          bar_x, bar_y_offset + 40, (255, 255, 0))
-            draw_stat_bar(screen, oxygen_icon, player.oxygen, 100,
-                          bar_x, bar_y_offset + 60, (0, 255, 0))
 
             current_pos = (player.x, player.y)
             moving = current_pos != last_pos

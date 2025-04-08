@@ -1,5 +1,5 @@
 #Item File used to create Item classes aswell as Initiate the items at the end.
-
+import pygame
 #Parent Item class defines item name and weight
 class Item():
     def __init__(self, item_name, item_weight):
@@ -27,12 +27,13 @@ class Radioactive(Item):
         self.mining_lvl = mining_lvl
 #Inherited Plant class further defines the type, satiation, oxygen potential and mining level
 class Plant(Item):
-    def __init__(self, item_name, item_weight, satiation, oxypot, grow_rate):
+    def __init__(self, item_name, item_weight, satiation, oxypot, grow_rate, icon=None):
         super().__init__(item_name, item_weight)
         self.type = "Plant"
         self.satiation = satiation
         self.oxypot = oxypot
         self.grow_rate= grow_rate
+        self.icon = icon # Ahmed a added this to make sure the photos show in the inventory
 #Inherited Oxygen Tank class further defines the oxygen levels and cap      
 class OxygenTank(Item):
     def __init__(self, item_name, item_weight, oxygen_cap, oxygen=0):
@@ -110,13 +111,18 @@ radioactives = {
 }
 
 plants = {
-    "Basic Potato": Plant("Basic Potato", 0.5, 20, 5, 30),
-    "Mars Potato": Plant("Mars Potato", 1, 30, 5, 60),
-    "Tree Potato": Plant("Tree Potato", 1, 0, 10, 60)
+    "Basic Potato": Plant("Basic Potato", 0.5, 20, 5, 30, icon= pygame.transform.scale(
+    pygame.image.load("assets/basic_potato.png"), (30, 30))),
+    "Mars Potato": Plant("Mars Potato", 1, 30, 5, 60, pygame.transform.scale(
+    pygame.image.load("assets/mars_potato.png"), (30, 30)
+)),
+    "Tree Potato": Plant("Tree Potato", 1, 0, 10, 60, icon=pygame.transform.scale(
+    pygame.image.load("assets/tree_potato.png"), (30, 30)
+))
 }
 
 oxygen_tanks = {
-    "Oxygen Tank A": OxygenTank("Oxygen Tank A",1,0),
+    "Oxygen Tank A": OxygenTank("Oxygen Tank A",1,100),
     "Oxygen Tank B": OxygenTank("Oxygen Tank B",1,100)
 }
 
