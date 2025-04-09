@@ -1,6 +1,6 @@
 import pygame
 from item import *
-from Interactions import PlacedOxygenTank
+from interactions import PlacedOxygenTank
 
 class Character:
     def __init__(self, x, y, map_x, map_y, speed, hunger, thirst, fuel, oxygen, health):

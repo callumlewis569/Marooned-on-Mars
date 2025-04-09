@@ -6,7 +6,7 @@ import item
 import math
 import time
 import random
-from Interactions import FarmPlot, PlacedOxygenTank
+from interactions import FarmPlot, PlacedOxygenTank
 from item import Plant, OxygenTank
 import pygame_widgets
 from pygame_widgets.button import Button
@@ -14,443 +14,662 @@ from ai_assistant import Shannon
 import asyncio
 import pyaudio
 
-# Initialisation
-pygame.init()
-WIDTH, HEIGHT = 500, 500
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Marooned on Mars")
 
-clock = pygame.time.Clock()
+class GameState:
+    """Base class for all game states"""
 
-# Set initial player and map features
-map_size = 10
-map_key = {
-    'blank': [
-        pygame.image.load("assets/tile_1.png").convert_alpha(),
-        pygame.image.load("assets/tile_5.png").convert_alpha(),
-        pygame.image.load("assets/tile_7.png").convert_alpha(),
-        pygame.image.load("assets/tile_8.png").convert_alpha()
-    ],
-    'mountain': [
-        pygame.image.load("assets/tile_2.png").convert_alpha(),
-        pygame.image.load("assets/tile_6.png").convert_alpha()
-    ],
-    'cave': [pygame.image.load("assets/tile_3.png").convert_alpha()],
-    'ore': [
-        pygame.image.load("assets/tile_1.png").convert_alpha(),
-        pygame.image.load("assets/tile_5.png").convert_alpha(),
-        pygame.image.load("assets/tile_7.png").convert_alpha(),
-        pygame.image.load("assets/tile_8.png").convert_alpha()
-    ],
-    'ship': [pygame.image.load("assets/tile_4.png").convert_alpha()]
-}
+    def __init__(self, game):
+        self.game: Game = game
 
-player_x = 206
-player_y = 296
-map_x = map_size // 2
-map_y = map_size // 2
-player_speed = 1
-player_hunger = 100
-player_thirst = 100
-player_fuel = 100
-player_oxygen = 100
-player_health = 100
+    def handle_events(self, events):
+        """Process pygame events"""
+        pass
 
-player = Character(
-    player_x,
-    player_y,
-    map_x,
-    map_y,
-    player_speed,
-    player_hunger,
-    player_thirst,
-    player_fuel,
-    player_oxygen,
-    player_health
-)
+    def update(self, dt):
+        """Update game logic"""
+        pass
 
-# Display text
-health_icon = pygame.image.load("assets/heart.png").convert_alpha()
-thirst_icon = pygame.image.load("assets/WaterDroplet.png").convert_alpha()
-fuel_icon = pygame.image.load("assets/fuel.png").convert_alpha()
-oxygen_icon = pygame.image.load("assets/oxygen.png").convert_alpha()
-food_icon = pygame.image.load("assets/food_icon.png").convert_alpha()
+    def render(self):
+        """Render the state to the screen"""
+        pass
 
-# Scale icons if needed
-icon_size = (25, 25)
-health_icon = pygame.transform.scale(health_icon, icon_size)
-thirst_icon = pygame.transform.scale(thirst_icon, icon_size)
-fuel_icon = pygame.transform.scale(fuel_icon, icon_size)
-oxygen_icon = pygame.transform.scale(oxygen_icon, icon_size)
-food_icon = pygame.transform.scale(food_icon, (20, 20))
+    def enter(self, **kwargs):
+        """Called when state becomes active"""
+        pass
 
-# Define bar properties
-bar_width = 100
-bar_height = 10
-bar_x = 40  # X position after the icon
-bar_y_offset = 10  # Spacing between bars
+    def exit(self):
+        """Called when state is no longer active"""
+        pass
 
 
-# Define tile borders
-x = WIDTH // 2
-y = HEIGHT // 2
+class MenuState(GameState):
+    """Main menu state"""
 
-diamond_center = (x, y)
-diamond_size = 200
+    def __init__(self, game):
+        super().__init__(game)
+        self.button = None
 
-top = (x + 10, y + 100 - diamond_size)
-right = (x + 20 + diamond_size, y + 10)
-bottom = (x, y - 70 + diamond_size)
-left = (x - 5 - diamond_size, y + 15)
+    def enter(self, **kwargs):
+        # Setup menu elements
+        button_width = 300
+        button_height = 150
+        inactive_col = (255, 140, 0)
+        hover_col = (255, 100, 0)
+        pressed_col = (200, 50, 0)
 
-diamond_points = [top, right, bottom, left]
+        self.button = Button(
+            self.game.screen,
+            self.game.WIDTH // 2 - button_width // 2,
+            self.game.HEIGHT // 2 - button_height // 2,
+            button_width,
+            button_height,
+            text='Play',
+            fontSize=40,
+            fontColour=(255, 255, 255),
+            inactiveColour=inactive_col,
+            hoverColour=hover_col,
+            pressedColour=pressed_col,
+            radius=30,
+            borderThickness=3,
+            borderColour=(255, 100, 0),
+            onClick=lambda: self.game.change_state("location")
+        )
 
-# Create diamond mask once
-diamond_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-pygame.draw.polygon(diamond_surface, (255, 255, 255), diamond_points)
-diamond_mask = pygame.mask.from_surface(diamond_surface)
+    def handle_events(self, events):
+        pygame_widgets.update(events)
 
-HUNGER_RATE = 0.005  # Hunger increases over time
-THIRST_RATE = 0.01  # Thirst increases over time
-FUEL_RATE = 0.02     # Fuel decreases when moving
-OXYGEN_RATE = 0.007  # Oxygen decreases over time
-HEALTH_RATE = 0.01
-
-font = pygame.font.Font(None, 24)
-
-start_ticks = pygame.time.get_ticks()  # Start time for clock
-hour = 0
-day = 1
-
-def update_game_time():
-    global hour, day, start_ticks
-
-    elapsed_time = pygame.time.get_ticks() - start_ticks
-
-    if elapsed_time >= 20000:
-        start_ticks = pygame.time.get_ticks()
-        hour += 1
-
-        if hour == 24:
-            hour = 0
-            day += 1
+    def render(self, **kwargs):
+        self.game.screen.fill(0)  # Clear screen with black
+        events = kwargs['events']
+        pygame_widgets.update(events)
 
 
-def draw_clock(screen):
-    time_text = f"Day {day} | {hour:02}:00"
-    time_surface = font.render(
-        time_text, True, (255, 255, 255))  # White color for text
-    # Draw in the top-right corner
-    screen.blit(time_surface, (WIDTH - 150, 10))
+class LocationSelectionState(GameState):
+    """State for selecting spawn location on Mars"""
 
-def get_exit_side(player_pos, center):
-    dx = player_pos[0] - center[0]
-    dy = player_pos[1] - center[1]
+    def __init__(self, game):
+        super().__init__(game)
+        self.mars_surface = pygame.image.load("assets/mars.png")
+        self.cross_icon = pygame.image.load("assets/cross.png")
+        self.selected_point = None
+        self.confirm_button_rect = None
 
-    angle = math.degrees(math.atan2(-dy, dx))
-    angle %= 360
+    def enter(self, **kwargs):
+        self.selected_point = None
 
-    if 0 <= angle < 90:
-        return "top-right"
-    elif 90 <= angle < 180:
-        return "top-left"
-    elif 180 <= angle < 270:
-        return "bottom-left"
-    else:
-        return "bottom-right"
-
-INVENTORY_SLOT_SIZE = 40
-INVENTORY_Y = HEIGHT - INVENTORY_SLOT_SIZE - 10
-INVENTORY_X = (WIDTH - (INVENTORY_SLOT_SIZE * 9)) // 2
-
-player.add_item(item.plants["Basic Potato"])
-player.add_item(item.plants["Basic Potato"])
-
-player.add_item(item.plants["Mars Potato"])
-player.add_item(item.oxygen_tanks["Oxygen Tank A"])
-player.add_item(item.plants["Tree Potato"])
-player.add_item(item.oxygen_tanks["Oxygen Tank B"])
-player.add_item(item.radioactives["Nytrazine"])
-
-def draw_inventory(screen, player, font):
-    for slot in range(player.inventory_cap):
-        x = INVENTORY_SLOT_SIZE + (slot * INVENTORY_SLOT_SIZE)
-        color = (150, 150, 150) if slot != player.selected_inventory_slot else (255, 255, 255) # highlights inventroy slot
-        pygame.draw.rect(screen, color, (x, INVENTORY_Y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE), 2)
-        pygame.draw.rect(screen, (50, 50, 50), (x + 2, INVENTORY_Y + 2, INVENTORY_SLOT_SIZE - 4, INVENTORY_SLOT_SIZE - 4))
-        # makes it so that there are boarders around the slot
-        # takes item and the number of that item v
-        item, count = player.inventory[slot]
-        if item:
-            if isinstance(item, OxygenTank): #right now it only displays when item is instance of
-                screen.blit(item.icon , (x + 5, INVENTORY_Y + 5))
-                oxygen_text = f"{int(item.oxygen)}/{item.oxygen_cap}" # shows the oxygen levels
-                text = font.render(oxygen_text, True, (255, 255, 255))
-                screen.blit(text, (x + 5, INVENTORY_Y + 20))
-            elif item.icon:
-                screen.blit(item.icon, (x + 5, INVENTORY_Y + 5))
-            if count > 1:
-                count_text = font.render(str(count), True, (255, 255, 255))
-                screen.blit(count_text, (x + 25, INVENTORY_Y + 25))
-
-
-
-
-def draw_stat_bar(screen, icon, value, max_value, x, y, color):
-    screen.blit(icon, (x - 25, y - 5))
-    pygame.draw.rect(screen, (50, 50, 50), (x, y, bar_width, bar_height))
-    fill_width = (value / max_value) * bar_width
-    pygame.draw.rect(screen, color, (x, y, fill_width, bar_height))
-
-def update_stats(player, moving=False, tile_type="blank"):
-    player.hunger = min(player.hunger - HUNGER_RATE, 100)
-    player.thirst = max(player.thirst - THIRST_RATE, 0)    
-    player.oxygen = max(player.oxygen - OXYGEN_RATE, 0)
-
-    # Health effects
-    if player.oxygen <= 0:
-        player.health = max(player.health - HEALTH_RATE, 0)
-
-    if player.hunger >= 100 or player.thirst <= 0:
-        player.health = max(player.health - HEALTH_RATE, 0)
-
-# Game loop
-
-
-current_page = 0
-pages = ["menu", "location", "game"]
-
-
-page_change_flag = False
-page_change_time = 0
-delay_duration = 0.5
-
-
-def change_page():
-    global current_page
-    current_page += 1
-    if current_page >= len(pages):
-        current_page = 0  # Reset to menu if needed, or handle differently
-    print(f"Changed to page: {pages[current_page]}")
-
-
-async def game_loop():
-    global stop_flag
-    running = True
-    seedxy = []
-    inside_ship = False
-    last_pos = (player.x, player.y)
-    agent_task = None
-
-    while running:
-        # Get all events once per frame
-        events = pygame.event.get()
-
-        # Check for quit event in all pages
+    def handle_events(self, events):
         for event in events:
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+
+                # Check for clicks on the Mars surface
+                mars_rect = self.mars_surface.get_rect()
+                if mars_rect.collidepoint(mouse_pos):
+                    clicked_pixel = self.mars_surface.get_at(mouse_pos)
+                    if clicked_pixel.a > 0:  # Ensure it's not clicking on transparent part
+                        self.selected_point = list(mouse_pos)
+
+                # Check for confirm button click if location is selected
+                if self.selected_point and self.confirm_button_rect:
+                    if self.confirm_button_rect.collidepoint(mouse_pos):
+                        # Initialize the game map with the selected seed
+                        x, y = self.selected_point
+                        seed = random.seed(int(str(x) + str(y)))
+                        self.game.initialize_map(seed)
+                        self.game.change_state("gameplay")
+
+    def render(self, **_):
+        self.game.screen.fill(0)
+        self.game.screen.blit(self.mars_surface, (0, 0))
+
+        if self.selected_point:
+            # Draw selection cross
+            self.game.screen.blit(
+                self.cross_icon, (self.selected_point[0] - 10.5, self.selected_point[1] - 10.5))
+
+            # Draw confirmation button
+            button_width = 150
+            button_height = 50
+            button_x = self.game.WIDTH - button_width - 20
+            button_y = self.game.HEIGHT - button_height - 20
+
+            self.confirm_button_rect = pygame.Rect(
+                button_x, button_y, button_width, button_height)
+            pygame.draw.rect(self.game.screen, (0, 200, 0),
+                             self.confirm_button_rect, 0, 10)
+
+            # Draw button text
+            confirm_text = self.game.font.render(
+                "Confirm", True, (255, 255, 255))
+            text_rect = confirm_text.get_rect(
+                center=(button_x + button_width/2, button_y + button_height/2))
+            self.game.screen.blit(confirm_text, text_rect)
 
 
-        # Handle current page
-        if pages[current_page] == "menu":
-            button_width = 300
-            button_height = 150
-            inactive_col = (255, 140, 0)
-            hover_col = (255, 100, 0)
-            pressed_col = (200, 50, 0)
+class GameplayState(GameState):
+    """Main gameplay state"""
 
-            button = Button(
-                screen,
-                WIDTH // 2 - button_width // 2,
-                HEIGHT // 2 - button_height // 2,
-                button_width,
-                button_height,
-                text='Play',
-                fontSize=40,
-                fontColour=(255, 255, 255),
-                inactiveColour=inactive_col,
-                hoverColour=hover_col,
-                pressedColour=pressed_col,
-                radius=30,
-                borderThickness=3,
-                borderColour=(255, 100, 0),
-                onClick=lambda: change_page()
-            )
+    def __init__(self, game):
+        super().__init__(game)
+        self.last_pos = None
 
-            # Update widgets with the events we already collected
-            pygame_widgets.update(events)
+    def enter(self, **_):
+        pass
 
-        elif pages[current_page] == "location":
-            screen.fill(0)
-            mars = pygame.image.load("assets/mars.png")
-            screen.blit(mars, (0, 0))
+    def exit(self):
+        pass
 
-            if seedxy:
-                cross = pygame.image.load("assets/cross.png")
-                screen.blit(cross, (seedxy[0] - 10.5, seedxy[1] - 10.5))
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                # Inventory selection
+                if pygame.K_1 <= event.key <= pygame.K_9:
+                    slot = event.key - pygame.K_1
+                    self.game.player.select_inventory(slot)
+                    print(
+                        f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
 
-                # Create a confirmation button
-                button_width = 150
-                button_height = 50
-                button_x = WIDTH - button_width - 20
-                button_y = HEIGHT - button_height - 20
+                # Add escape key to return to menu
+                if event.key == pygame.K_ESCAPE:
+                    self.game.change_state("menu")
 
-                # Draw the button
-                pygame.draw.rect(screen, (0, 200, 0), (button_x,
-                                                       button_y, button_width, button_height), 0, 10)
+    def update(self, _):
+        # Check if player is inside the ship
+        self.check_ship_proximity()
 
-                # Draw button text
-                confirm_text = font.render("Confirm", True, (255, 255, 255))
-                text_rect = confirm_text.get_rect(
-                    center=(button_x + button_width/2, button_y + button_height/2))
-                screen.blit(confirm_text, text_rect)
+        # Update game time
+        self.game.update_game_time()
 
-                # Check if the confirm button is clicked
-                for event in events:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        mouse_pos = pygame.mouse.get_pos()
-                        if button_x <= mouse_pos[0] <= button_x + button_width and button_y <= mouse_pos[1] <= button_y + button_height:
-                            # Initialize game with the selected seed
-                            x, y = seedxy
-                            seed = random.seed(int(str(x) + str(y)))
-                            map = Map(map_size, seed, map_key)
-                            map.display_map()
+        # Update player movement and position
+        current_pos = (self.game.player.x, self.game.player.y)
+        moving = current_pos != self.last_pos
+        self.last_pos = current_pos
 
-                            change_page()
-                            page_change_flag = False
+        # Get current tile and update stats
+        map_tile = self.game.map.get_tile(
+            self.game.player.map_x, self.game.player.map_y)
+        self.game.update_stats(moving, map_tile)
 
-            # Handle new clicks on the map
+        # Handle player movement and map transitions
+        self.handle_player_movement()
+
+        # Check game over condition
+        if self.game.player.health <= 0:
+            print("Game Over: You died!")
+            self.game.change_state("menu")
+
+    def check_ship_proximity(self):
+        # Check if player is in the ship's location and inside the entry area
+        if ((self.game.player.map_x == self.game.map_size // 2 and
+             self.game.player.map_y == self.game.map_size // 2) and
+            (self.game.player.x < 280 and self.game.player.x > 235 and
+             self.game.player.y > 272 and self.game.player.y < 292)):
+            self.game.change_state("spaceship")
+
+    def handle_player_movement(self):
+        player_pos = (int(self.game.player.x), int(self.game.player.y))
+
+        # Check if player is within the diamond boundary
+        if self.game.diamond_mask.get_at(player_pos):
+            self.game.player.move(self.game.WIDTH, self.game.HEIGHT)
+        else:
+            # Player is leaving the current tile
+            exit_side = self.game.get_exit_side(
+                player_pos, self.game.diamond_center)
+
+            if exit_side == "top-right":
+                if self.game.player.map_y < self.game.map_size - 1:
+                    self.game.player.map_y += 1
+                    self.game.player.x = 150
+                    self.game.player.y = 324
+                else:
+                    self.game.player.x -= 1
+                    self.game.player.y += 1
+            elif exit_side == "bottom-right":
+                if self.game.player.map_x < self.game.map_size - 1:
+                    self.game.player.map_x += 1
+                    self.game.player.x = 177
+                    self.game.player.y = 195
+                else:
+                    self.game.player.x -= 1
+                    self.game.player.y -= 1
+            elif exit_side == "bottom-left":
+                if self.game.player.map_y > 0:
+                    self.game.player.map_y -= 1
+                    self.game.player.x = 349
+                    self.game.player.y = 197
+                else:
+                    self.game.player.x += 1
+                    self.game.player.y -= 1
+            elif exit_side == "top-left":
+                if self.game.player.map_x > 0:
+                    self.game.player.map_x -= 1
+                    self.game.player.x = 356
+                    self.game.player.y = 321
+                else:
+                    self.game.player.x += 1
+                    self.game.player.y += 1
+
+    def render(self, **_):
+        self.game.screen.fill(0)
+
+        # Render current tile
+        tile_image = self.game.map.tile_images[(
+            self.game.player.map_x, self.game.player.map_y)]
+        self.game.screen.blit(tile_image, (0, 0))
+
+        # Draw UI elements
+        self.render_ui()
+
+        # Draw player
+        self.game.screen.blit(self.game.player.image,
+                              (self.game.player.x, self.game.player.y))
+
+    def render_ui(self):
+        # Draw stat bars
+        self.game.draw_stat_bar(self.game.health_icon, self.game.player.health,
+                                100, self.game.bar_x, self.game.bar_y_offset, (255, 0, 0))
+        self.game.draw_stat_bar(self.game.thirst_icon, self.game.player.thirst, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 20, (0, 0, 255))
+        self.game.draw_stat_bar(self.game.fuel_icon, self.game.player.fuel, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 40, (255, 255, 0))
+        self.game.draw_stat_bar(self.game.oxygen_icon, self.game.player.oxygen, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 60, (0, 255, 0))
+        self.game.draw_stat_bar(self.game.food_icon, self.game.player.hunger, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 80, (120, 0, 0))
+
+        # Draw inventory
+        self.game.draw_inventory()
+
+        # Draw clock
+        self.game.draw_clock()
+
+
+class SpaceShipState(GameState):
+    """State for when inside the spaceship"""
+
+    def __init__(self, game):
+        super().__init__(game)
+        self.last_pos = None
+        self.agent_task = None
+
+    def enter(self):
+        self.last_pos = (self.game.player.x, self.game.player.y)
+        self.agent_task = None
+
+    def exit(self):
+        # Cancel any running agent task when exiting gameplay
+        if self.agent_task:
+            self.agent_task.cancel()
+            self.agent_task = None
+
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:  # Press 'q' to quit the agent
+                    print("Quitting the AI agent...")
+                    if self.agent_task:
+                        self.agent_task.cancel()
+                    self.game.change_state("gameplay")
+
+    def update(self, _):
+        # Update AI assistant based on ship status
+        self.update_ai_assistant()
+
+        # Update game time
+        self.game.update_game_time()
+
+        # Update player movement and position
+        current_pos = (self.game.player.x, self.game.player.y)
+        moving = current_pos != self.last_pos
+        self.last_pos = current_pos
+
+        # Get current tile and update stats
+        map_tile = self.game.map.get_tile(
+            self.game.player.map_x, self.game.player.map_y)
+        self.game.update_stats(moving, map_tile)
+
+        # Handle player movement and map transitions
+        self.game.player.move(self.game.WIDTH, self.game.HEIGHT)
+
+        # Check game over condition
+        if self.game.player.health <= 0:
+            print("Game Over: You died!")
+            self.game.change_state("menu")
+
+    def update_ai_assistant(self):
+        # If player is inside the ship, activate the AI assistant based on game progress
+        if self.game.day < 3 and self.agent_task is None:
+            shannon = Shannon(self.game.player.oxygen, self.game.player.thirst,
+                              self.game.player.hunger, self.game.player.fuel,
+                              100, self.game.player.inventory)
+            self.agent_task = asyncio.create_task(shannon.good())
+        elif self.game.day < 7 and self.agent_task is None:
+            shannon = Shannon(self.game.player.oxygen, self.game.player.thirst,
+                              self.game.player.hunger, self.game.player.fuel,
+                              100, self.game.player.inventory)
+            self.agent_task = asyncio.create_task(shannon.middle())
+        elif self.game.day >= 7 and self.agent_task is None:
+            shannon = Shannon(self.game.player.oxygen, self.game.player.thirst,
+                              self.game.player.hunger, self.game.player.fuel,
+                              100, self.game.player.inventory)
+            self.agent_task = asyncio.create_task(shannon.evil())
+
+    def render(self, **_):
+        # Render current tile
+        tile_image = pygame.image.load("assets/ship_interior.png")
+        self.game.screen.blit(tile_image, (0, 0))
+
+        # Draw UI elements
+        self.render_ui()
+
+        # Draw player
+        self.game.screen.blit(self.game.player.image,
+                              (self.game.player.x, self.game.player.y))
+
+    def render_ui(self):
+        # Draw stat bars
+        self.game.draw_stat_bar(self.game.health_icon, self.game.player.health,
+                                100, self.game.bar_x, self.game.bar_y_offset, (255, 0, 0))
+        self.game.draw_stat_bar(self.game.thirst_icon, self.game.player.thirst, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 20, (0, 0, 255))
+        self.game.draw_stat_bar(self.game.fuel_icon, self.game.player.fuel, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 40, (255, 255, 0))
+        self.game.draw_stat_bar(self.game.oxygen_icon, self.game.player.oxygen, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 60, (0, 255, 0))
+        self.game.draw_stat_bar(self.game.food_icon, self.game.player.hunger, 100,
+                                self.game.bar_x, self.game.bar_y_offset + 80, (120, 0, 0))
+
+        # Draw inventory
+        self.game.draw_inventory()
+
+        # Draw clock
+        self.game.draw_clock()
+
+
+class Game:
+    """Main game class that manages all game states"""
+    # Constants
+    WIDTH, HEIGHT = 500, 500
+    HUNGER_RATE = 0.005
+    THIRST_RATE = 0.01
+    FUEL_RATE = 0.02
+    OXYGEN_RATE = 0.007
+    HEALTH_RATE = 0.01
+
+    def __init__(self):
+        # Initialize pygame
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        pygame.display.set_caption("Marooned on Mars")
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 24)
+
+        # Initialize game components
+        self.initialize_player()
+        self.load_assets()
+        self.create_diamond_mask()
+        self.initialize_time()
+        self.initialize_inventory_settings()
+
+        # Create state dictionary
+        self.states = {
+            "menu": MenuState(self),
+            "location": LocationSelectionState(self),
+            "gameplay": GameplayState(self),
+            "spaceship": SpaceShipState(self)
+        }
+
+        # Set initial state
+        self.current_state = None
+        self.map = None
+
+        # Change to initial state
+        self.change_state("menu")
+
+    def initialize_player(self):
+        """Initialize player character and stats"""
+        self.map_size = 10
+
+        # Player starting position and stats
+        player_x, player_y = 206, 296
+        map_x, map_y = self.map_size // 2, self.map_size // 2
+        player_speed = 1
+        player_hunger = 100
+        player_thirst = 100
+        player_fuel = 100
+        player_oxygen = 100
+        player_health = 100
+
+        self.player = Character(
+            player_x, player_y, map_x, map_y,
+            player_speed, player_hunger, player_thirst,
+            player_fuel, player_oxygen, player_health
+        )
+
+    def load_assets(self):
+        """Load and initialize game assets"""
+        # Load map tile images
+        self.map_key = {
+            'blank': [
+                pygame.image.load("assets/tile_1.png").convert_alpha(),
+                pygame.image.load("assets/tile_5.png").convert_alpha(),
+                pygame.image.load("assets/tile_7.png").convert_alpha(),
+                pygame.image.load("assets/tile_8.png").convert_alpha()
+            ],
+            'mountain': [
+                pygame.image.load("assets/tile_2.png").convert_alpha(),
+                pygame.image.load("assets/tile_6.png").convert_alpha()
+            ],
+            'cave': [pygame.image.load("assets/tile_3.png").convert_alpha()],
+            'ore': [
+                pygame.image.load("assets/tile_1.png").convert_alpha(),
+                pygame.image.load("assets/tile_5.png").convert_alpha(),
+                pygame.image.load("assets/tile_7.png").convert_alpha(),
+                pygame.image.load("assets/tile_8.png").convert_alpha()
+            ],
+            'ship': [pygame.image.load("assets/tile_4.png").convert_alpha()]
+        }
+
+        # Load UI icons
+        icon_size = (25, 25)
+        self.health_icon = pygame.transform.scale(
+            pygame.image.load("assets/heart.png").convert_alpha(), icon_size)
+        self.thirst_icon = pygame.transform.scale(
+            pygame.image.load("assets/WaterDroplet.png").convert_alpha(), icon_size)
+        self.fuel_icon = pygame.transform.scale(
+            pygame.image.load("assets/fuel.png").convert_alpha(), icon_size)
+        self.oxygen_icon = pygame.transform.scale(
+            pygame.image.load("assets/oxygen.png").convert_alpha(), icon_size)
+        self.food_icon = pygame.transform.scale(
+            pygame.image.load("assets/food_icon.png").convert_alpha(), (20, 20))
+
+        # Define bar properties
+        self.bar_width = 100
+        self.bar_height = 10
+        self.bar_x = 40  # X position after the icon
+        self.bar_y_offset = 10  # Spacing between bars
+
+    def create_diamond_mask(self):
+        """Create the diamond-shaped movement area mask"""
+        x = self.WIDTH // 2
+        y = self.HEIGHT // 2
+
+        self.diamond_center = (x, y)
+        diamond_size = 200
+
+        top = (x + 10, y + 100 - diamond_size)
+        right = (x + 20 + diamond_size, y + 10)
+        bottom = (x, y - 70 + diamond_size)
+        left = (x - 5 - diamond_size, y + 15)
+
+        diamond_points = [top, right, bottom, left]
+
+        # Create diamond mask
+        self.diamond_surface = pygame.Surface(
+            (self.WIDTH, self.HEIGHT), pygame.SRCALPHA)
+        pygame.draw.polygon(self.diamond_surface,
+                            (255, 255, 255), diamond_points)
+        self.diamond_mask = pygame.mask.from_surface(self.diamond_surface)
+
+    def initialize_time(self):
+        """Initialize game time"""
+        self.start_ticks = pygame.time.get_ticks()
+        self.hour = 0
+        self.day = 1
+
+    def initialize_inventory_settings(self):
+        """Initialize inventory UI settings"""
+        self.INVENTORY_SLOT_SIZE = 40
+        self.INVENTORY_Y = self.HEIGHT - self.INVENTORY_SLOT_SIZE - 10
+        self.INVENTORY_X = (self.WIDTH - (self.INVENTORY_SLOT_SIZE * 9)) // 2
+
+        # Add initial items to player inventory
+        self.player.add_item(item.plants["Basic Potato"])
+        self.player.add_item(item.plants["Basic Potato"])
+        self.player.add_item(item.plants["Mars Potato"])
+        self.player.add_item(item.oxygen_tanks["Oxygen Tank A"])
+        self.player.add_item(item.plants["Tree Potato"])
+        self.player.add_item(item.oxygen_tanks["Oxygen Tank B"])
+        self.player.add_item(item.radioactives["Nytrazine"])
+
+    def initialize_map(self, seed):
+        """Initialize the game map with a specific seed"""
+        self.map = Map(self.map_size, seed, self.map_key)
+        self.map.display_map()
+
+    def change_state(self, state_name, **kwargs):
+        """Change to a different game state"""
+        if state_name in self.states:
+            if self.current_state:
+                self.current_state.exit()
+            self.current_state = self.states[state_name]
+            self.current_state.enter(**kwargs)
+            print(f"Changed to state: {state_name}")
+
+    def update_game_time(self):
+        """Update in-game time based on real time passage"""
+        elapsed_time = pygame.time.get_ticks() - self.start_ticks
+
+        if elapsed_time >= 20000:  # 20 seconds = 1 hour in-game
+            self.start_ticks = pygame.time.get_ticks()
+            self.hour += 1
+
+            if self.hour == 24:
+                self.hour = 0
+                self.day += 1
+
+    def draw_clock(self):
+        """Draw the in-game clock/calendar"""
+        time_text = f"Day {self.day} | {self.hour:02}:00"
+        time_surface = self.font.render(time_text, True, (255, 255, 255))
+        # Draw in the top-right corner
+        self.screen.blit(time_surface, (self.WIDTH - 150, 10))
+
+    def get_exit_side(self, player_pos, center):
+        """Determine which side of the diamond the player is exiting through"""
+        dx = player_pos[0] - center[0]
+        dy = player_pos[1] - center[1]
+
+        angle = math.degrees(math.atan2(-dy, dx))
+        angle %= 360
+
+        if 0 <= angle < 90:
+            return "top-right"
+        elif 90 <= angle < 180:
+            return "top-left"
+        elif 180 <= angle < 270:
+            return "bottom-left"
+        else:
+            return "bottom-right"
+
+    def draw_inventory(self):
+        """Draw the player's inventory UI"""
+        for slot in range(self.player.inventory_cap):
+            x = self.INVENTORY_SLOT_SIZE + (slot * self.INVENTORY_SLOT_SIZE)
+            color = (150, 150, 150) if slot != self.player.selected_inventory_slot else (
+                255, 255, 255)
+            pygame.draw.rect(self.screen, color, (x, self.INVENTORY_Y,
+                             self.INVENTORY_SLOT_SIZE, self.INVENTORY_SLOT_SIZE), 2)
+            pygame.draw.rect(self.screen, (50, 50, 50), (x + 2, self.INVENTORY_Y + 2,
+                             self.INVENTORY_SLOT_SIZE - 4, self.INVENTORY_SLOT_SIZE - 4))
+
+            item, count = self.player.inventory[slot]
+            if item:
+                if isinstance(item, OxygenTank):
+                    self.screen.blit(item.icon, (x + 5, self.INVENTORY_Y + 5))
+                    oxygen_text = f"{int(item.oxygen)}/{item.oxygen_cap}"
+                    text = self.font.render(oxygen_text, True, (255, 255, 255))
+                    self.screen.blit(text, (x + 5, self.INVENTORY_Y + 20))
+                elif item.icon:
+                    self.screen.blit(item.icon, (x + 5, self.INVENTORY_Y + 5))
+                if count > 1:
+                    count_text = self.font.render(
+                        str(count), True, (255, 255, 255))
+                    self.screen.blit(
+                        count_text, (x + 25, self.INVENTORY_Y + 25))
+
+    def draw_stat_bar(self, icon, value, max_value, x, y, color):
+        """Draw a stat bar with icon"""
+        self.screen.blit(icon, (x - 25, y - 5))
+        pygame.draw.rect(self.screen, (50, 50, 50),
+                         (x, y, self.bar_width, self.bar_height))
+        fill_width = (value / max_value) * self.bar_width
+        pygame.draw.rect(self.screen, color,
+                         (x, y, fill_width, self.bar_height))
+
+    def update_stats(self, moving=False, tile_type="blank"):
+        """Update player's stats based on time and conditions"""
+        self.player.hunger = min(self.player.hunger - self.HUNGER_RATE, 100)
+        self.player.thirst = max(self.player.thirst - self.THIRST_RATE, 0)
+        self.player.oxygen = max(self.player.oxygen - self.OXYGEN_RATE, 0)
+
+        # Health effects
+        if self.player.oxygen <= 0:
+            self.player.health = max(self.player.health - self.HEALTH_RATE, 0)
+
+        if self.player.hunger >= 100 or self.player.thirst <= 0:
+            self.player.health = max(self.player.health - self.HEALTH_RATE, 0)
+
+    async def game_loop(self):
+        """Main game loop"""
+        running = True
+        last_time = time.time()
+
+        while running:
+            # Calculate delta time
+            current_time = time.time()
+            dt = current_time - last_time
+            last_time = current_time
+
+            # Get events once per frame
+            events = pygame.event.get()
+
+            # Check for quit
             for event in events:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    x, y = pygame.mouse.get_pos()
-                    mars_rect = mars.get_rect()
-                    if mars_rect.collidepoint(x, y):
-                        clicked_pixel = mars.get_at((x, y))
-                        if clicked_pixel.a > 0:
-                            seedxy = [x, y]
-                            # No longer setting page_change_flag here since we're using the confirm button
+                if event.type == pygame.QUIT:
+                    running = False
 
-        elif pages[current_page] == "game":
-            for event in events:
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:  # Press 'q' to quit the agent
-                        print("Quitting the AI agent...")
-                        agent_task.cancel()  # Cancel the agent task
-                        inside_ship = False
+            # Let current state handle events
+            self.current_state.handle_events(events)
 
-                    elif event.type == pygame.KEYDOWN: # added it so you can scroll through the inventory
-                        if pygame.K_1 <= event.key <= pygame.K_9:
-                            player.select_inventory(event.key - pygame.K_1)
-                            print(player.select_inventory(event.key - pygame.K_1)) # prints whats in your current hand
-                            print(player.inventory) # shows full inventory
-            screen.fill(0)
+            # Update current state
+            self.current_state.update(dt)
 
-            if inside_ship:
-                if day < 3 and agent_task is None:
-                    shannon = Shannon(player.oxygen, player.thirst, player.hunger,
-                  player.fuel, 100, player.inventory)
-                    agent_task = asyncio.create_task(shannon.good())
-                elif day < 7 and agent_task is None:
-                    shannon = Shannon(player.oxygen, player.thirst, player.hunger,
-                  player.fuel, 100, player.inventory)
-                    agent_task = asyncio.create_task(shannon.middle())
-                elif day >= 7 and agent_task is None:
-                    shannon = Shannon(player.oxygen, player.thirst, player.hunger,
-                  player.fuel, 100, player.inventory)
-                    agent_task = asyncio.create_task(shannon.evil())
-            
-            # If player leaves the ship, cancel the agent task
-            if not inside_ship and agent_task:
-                agent_task.cancel()
-                agent_task = None  # Reset the agent task reference
+            # Render current state
+            self.current_state.render(events=events)
 
-            if ((player.map_x == map_size // 2 and player.map_y == map_size // 2)
-                    and (player.x < 280 and player.x > 235 and player.y > 272 and player.y < 292)):
-                inside_ship = True
+            # Update display
+            pygame.display.flip()
+            self.clock.tick(60)
 
-            
+            await asyncio.sleep(0.01)  # For asyncio compatibility
 
-            
-            if not inside_ship:
-                update_stats(player)
-                update_game_time()
-                draw_clock(screen)
-            tile_image = pygame.image.load(
-                "assets/ship_interior.png") if inside_ship else map.tile_images[(player.map_x, player.map_y)]
-            screen.blit(tile_image, (0, 0))
+    async def main(self):
+        """Game entry point"""
+        await self.game_loop()
 
-            draw_stat_bar(screen, health_icon, player.health,
-                          100, bar_x, bar_y_offset, (255, 0, 0))
-            draw_stat_bar(screen, thirst_icon, player.thirst, 100,
-                          bar_x, bar_y_offset + 20, (0, 0, 255))
-            draw_stat_bar(screen, fuel_icon, player.fuel, 100,
-                          bar_x, bar_y_offset + 40, (255, 255, 0))
-            draw_stat_bar(screen, oxygen_icon, player.oxygen, 100,
-                          bar_x, bar_y_offset + 60, (0, 255, 0))
-            draw_stat_bar(screen, food_icon, player.hunger, 100,
-                          bar_x, bar_y_offset + 80, (120, 0, 0))
-            draw_inventory(screen, player, font)
-
-            screen.blit(player.image, (player.x, player.y))
-
-            current_pos = (player.x, player.y)
-            moving = current_pos != last_pos
-            last_pos = current_pos
-            map_tile = map.get_tile(player.map_x, player.map_y)
-            update_stats(player, moving, map_tile)
-
-            player_pos = (int(player.x), int(player.y))
-            if diamond_mask.get_at(player_pos) or inside_ship:
-                player.move(WIDTH, HEIGHT)
-            else:
-                exit_side = get_exit_side(player_pos, diamond_center)
-
-                if exit_side == "top-right":
-                    if player.map_y < map_size - 1:
-                        player.map_y += 1
-                        player.x = 150
-                        player.y = 324
-                    else:
-                        player.x -= 1
-                        player.y += 1
-                elif exit_side == "bottom-right":
-                    if player.map_x < map_size - 1:
-                        player.map_x += 1
-                        player.x = 177
-                        player.y = 195
-                    else:
-                        player.x -= 1
-                        player.y -= 1
-                elif exit_side == "bottom-left":
-                    if player.map_y > 0:
-                        player.map_y -= 1
-                        player.x = 349
-                        player.y = 197
-                    else:
-                        player.x += 1
-                        player.y -= 1
-                elif exit_side == "top-left":
-                    if player.map_x > 0:
-                        player.map_x -= 1
-                        player.x = 356
-                        player.y = 321
-                    else:
-                        player.x += 1
-                        player.y += 1
-
-            if player.health <= 0:
-                print("Game Over: You died!")
-                running = False
-
-        await asyncio.sleep(0.01)
-        pygame.display.flip()
-        clock.tick(60)
-
-
-async def main():
-    await game_loop()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    game = Game()
+    asyncio.run(game.main())
