@@ -184,9 +184,9 @@ class GameplayState(GameState):
         if isinstance(item, OxygenTank):
             for tank in self.game.player.transferring_tanks[:]:
                 if tank.oxygen > 0:
-                    tank.transfer_oxygen(self.game.player) 
+                    tank.transfer_oxygen(self.game.player)
         elif isinstance(item, Plant):
-            if count > 0 and self.game.player.hunger < self.game.player.hunger_cap:
+            if count > 0 and self.game.player.hunger != self.game.player.hunger_cap:
                 item.eat(self.game.player, selected_slot)
             else:
                 print("You are already full! You can't eat more.")
