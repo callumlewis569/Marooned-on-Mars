@@ -1,6 +1,6 @@
 import pygame
 from item import *
-from interactions import PlacedOxygenTank
+from Interactions import PlacedOxygenTank
 
 class Character:
     def __init__(self, x, y, map_x, map_y, speed, hunger, thirst, fuel, oxygen, health):
@@ -71,21 +71,6 @@ class Character:
                 return True
 
         return False  # Inventory full
-
-    # def remove_item(self, slot):
-    #     """Remove an item from the specified hotbar slot."""
-    #     if not (0 <= slot < len(self.hotbar)):
-    #         return False  # Invalid slot
-    #
-    #     item, count = self.hotbar[slot]
-    #     if item and count > 0:
-    #         count -= 1
-    #         if count == 0:
-    #             self.hotbar[slot] = (None, 0)  # Clear the slot if count reaches 0
-    #         else:
-    #             self.hotbar[slot] = (item, count)  # Update with reduced count
-    #         return True
-    #     return False  # No item to remove
 
     def select_inventory(self, slot):
         if 0 <= slot <= 8:

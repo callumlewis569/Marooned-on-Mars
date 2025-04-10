@@ -6,7 +6,7 @@ import item
 import math
 import time
 import random
-from interactions import FarmPlot, PlacedOxygenTank
+from Interactions import  PlacedOxygenTank, PlacedPlant
 from item import Plant, OxygenTank
 import pygame_widgets
 from pygame_widgets.button import Button
@@ -168,10 +168,63 @@ class GameplayState(GameState):
                     self.game.player.select_inventory(slot)
                     print(
                         f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
-
+                elif event.key == pygame.K_p:
+                    self.pressing_p()
+                elif event.key == pygame.K_h:
+                    self.pressing_h()
                 # Add escape key to return to menu
                 if event.key == pygame.K_ESCAPE:
                     self.game.change_state("menu")
+
+    def pressing_p(self):
+        selected_slot = self.game.player.selected_inventory_slot
+        item, count = self.game.player.inventory[selected_slot]
+        if count >= 1:
+            if isinstance(item, Plant):
+                # Place the plant in the world
+                placed = PlacedPlant(self.game.player.x, self.game.player.y, self.game.player.map_x,
+                                     self.game.player.map_y, item, game)
+                self.game.planted_crops.append(placed)
+
+                # Decrease item count
+                if count == 1:
+                    self.game.player.inventory[selected_slot] = (None, 0)
+                else:
+                    self.game.player.inventory[selected_slot] = (item, count - 1)
+                print(f"Planted {item.name} at ({self.game.player.x}, {self.game.player.y})")
+
+            if isinstance(item, OxygenTank):
+                placed = PlacedOxygenTank(self.game.player.x, self.game.player.y, self.game.player.map_x,
+                                          self.game.player.map_y, item, game, self.game.player)
+                self.game.oxygen_tanks.append(placed)
+                # Decrease item count
+                if count == 1:
+                    self.game.player.inventory[selected_slot] = (None, 0)
+                else:
+                    self.game.player.inventory[selected_slot] = (item, count - 1)
+                print(f"Planted {item.name} at ({self.game.player.x}, {self.game.player.y})")
+
+    def pressing_h(self):
+        for plant in self.game.planted_crops[:]:
+            plant.check_harvest()
+            if plant.ready:
+                distance = math.hypot(self.game.player.x - plant.x, self.game.player.y - plant.y)
+                if distance < 40:
+                    harvested_items = plant.harvest()
+                    for item in harvested_items:
+                        self.game.player.add_item(item)
+                    self.game.planted_crops.remove(plant)
+
+        for tank in self.game.oxygen_tanks[:]:
+            distance = math.hypot(self.game.player.x - tank.x, self.game.player.y - tank.y)
+            if distance < 40:
+                picked_up_tank = tank.pickup()
+                if self.game.player.add_item(picked_up_tank):
+                    self.game.oxygen_tanks.remove(tank)
+                    print(
+                        f"Picked up {picked_up_tank.name} with {picked_up_tank.oxygen}/{picked_up_tank.oxygen_cap} O2")
+                else:
+                    print("Inventory full!")
 
     def update(self, _):
         # Check if player is inside the ship
@@ -257,6 +310,17 @@ class GameplayState(GameState):
         tile_image = self.game.map.tile_images[(
             self.game.player.map_x, self.game.player.map_y)]
         self.game.screen.blit(tile_image, (0, 0))
+
+        for plant in self.game.planted_crops:
+            if (plant.map_x, plant.map_y) == (self.game.player.map_x, self.game.player.map_y):
+                plant.check_harvest()
+                plant.draw(self.game.screen)
+
+
+        for tank in self.game.oxygen_tanks:
+            if (tank.map_x, tank.map_y) == (self.game.player.map_x, self.game.player.map_y):
+                tank.check_near_plant()
+                tank.draw(self.game.screen, self.game.font)
 
         # Draw UI elements
         self.render_ui()
@@ -404,6 +468,8 @@ class Game:
         pygame.display.set_caption("Marooned on Mars")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 24)
+        self.planted_crops = []
+        self.oxygen_tanks = []
 
         # Initialize game components
         self.initialize_player()
@@ -411,6 +477,7 @@ class Game:
         self.create_diamond_mask()
         self.initialize_time()
         self.initialize_inventory_settings()
+
 
         # Create state dictionary
         self.states = {
