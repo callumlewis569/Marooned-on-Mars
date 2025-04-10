@@ -172,9 +172,24 @@ class GameplayState(GameState):
                     self.pressing_p()
                 elif event.key == pygame.K_h:
                     self.pressing_h()
+                elif event.key == pygame.K_u:
+                    self.pressing_u()
                 # Add escape key to return to menu
                 if event.key == pygame.K_ESCAPE:
                     self.game.change_state("menu")
+
+    def pressing_u(self):
+        selected_slot = self.game.player.selected_inventory_slot
+        item, count = self.game.player.inventory[selected_slot]
+        if isinstance(item, OxygenTank):
+            for tank in self.game.player.transferring_tanks[:]:
+                if tank.oxygen > 0:
+                    tank.transfer_oxygen(self.game.player) 
+        elif isinstance(item, Plant):
+            if count > 0 and self.game.player.hunger < self.game.player.hunger_cap:
+                item.eat(self.game.player, selected_slot)
+            else:
+                print("You are already full! You can't eat more.")
 
     def pressing_p(self):
         selected_slot = self.game.player.selected_inventory_slot
@@ -223,6 +238,8 @@ class GameplayState(GameState):
                     self.game.oxygen_tanks.remove(tank)
                     print(
                         f"Picked up {picked_up_tank.name} with {picked_up_tank.oxygen}/{picked_up_tank.oxygen_cap} O2")
+                    if picked_up_tank.oxygen > 0:
+                        self.game.player.transferring_tanks.append(picked_up_tank)
                 else:
                     print("Inventory full!")
 

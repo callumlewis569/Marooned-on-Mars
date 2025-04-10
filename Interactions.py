@@ -3,7 +3,7 @@ import time
 import pygame
 import math
 class PlacedOxygenTank:
-    def __init__(self, x, y, map_x, map_y ,oxygentank: OxygenTank, game, player):
+    def __init__(self, x, y, map_x, map_y ,oxygentank: OxygenTank,  game, player):
         self.x = x
         self.y = y
         self.map_x = map_x
@@ -28,12 +28,7 @@ class PlacedOxygenTank:
                     self.oxygentank.oxygen_cap
                 )
     def pickup(self):
-        oxygen_needed = self.player.oxygen_cap - self.player.oxygen
-        oxygen_transferred = min(self.oxygentank.oxygen, oxygen_needed)
-        self.player.oxygen += oxygen_transferred
-        self.oxygentank.oxygen -= oxygen_transferred
-        print(
-            f"Transferred {oxygen_transferred} O2 to player. Player now has {self.player.oxygen}/{self.player.oxygen_cap}")
+
         picked_up_tank = OxygenTank(
             self.oxygentank.name,
             self.oxygentank.weight,
@@ -42,6 +37,8 @@ class PlacedOxygenTank:
             self.oxygentank.icon
         )
         return picked_up_tank
+
+
 
 class PlacedPlant:
     def __init__(self, x, y, map_x, map_y ,plant: Plant, game):
@@ -94,3 +91,4 @@ class PlacedPlant:
         count = harvest_yields.get(self.plant.name, 1)  # Default to 1 if not found
         harvested_plants = [plants[self.plant.name] for _ in range(count)]
         return harvested_plants
+

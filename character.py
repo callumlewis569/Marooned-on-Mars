@@ -23,6 +23,7 @@ class Character:
         self.inventory = {i: (None, 0) for i in range(10)}
         self.inventory_cap = 10
         self.selected_inventory_slot = 0
+        self.transferring_tanks = []
 
     def move(self, map_width, map_height):
         keys = pygame.key.get_pressed()
@@ -77,3 +78,4 @@ class Character:
             self.selected_inventory_slot = slot
             return self.inventory[slot]
         return None
+

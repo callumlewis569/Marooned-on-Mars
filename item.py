@@ -38,6 +38,22 @@ class Plant(Item):
         self.oxypot = oxypot
         self.grow_rate= grow_rate
         self.icon = icon # Ahmed a added this to make sure the photos show in the inventory
+
+    def eat(self, player, inventory_slot):
+        # Increase hunger by the plant's satiation value
+        player.hunger += self.satiation
+        player.hunger = min(player.hunger, player.hunger_cap)  # Ensure hunger doesn't exceed the cap
+
+        print(f"Ate {self.name}: {self.satiation} hunger filled. "
+              f"Player now has {player.hunger}/{player.hunger_cap} hunger.")
+
+        # Remove one instance of the plant from the player's inventory
+        current_item, current_count = player.inventory[inventory_slot]
+        if current_count == 1:
+            player.inventory[inventory_slot] = (None, 0)  # Remove the plant from the inventory
+        else:
+            player.inventory[inventory_slot] = (current_item, current_count - 1)  # Decrease the count of the plant
+
 #Inherited Oxygen Tank class further defines the oxygen levels and cap      
 class OxygenTank(Item):
     def __init__(self, item_name, item_weight, oxygen_cap, oxygen=0, icon=None):
@@ -49,6 +65,15 @@ class OxygenTank(Item):
     def add_oxygen(self, amount):
         self.oxygen = min(self.oxygen + amount, self.oxygen_cap)
         print(f"Adding {amount} to tank, Oxygen: {self.oxygen}, Capacity: {self.oxygen_cap}")
+
+    def transfer_oxygen(self, player):
+        oxygen_needed = player.oxygen_cap - player.oxygen
+        oxygen_transferred = min(self.oxygen, oxygen_needed)
+        self.oxygen = max(0, min(self.oxygen - oxygen_transferred, self.oxygen_cap))
+        player.oxygen = max(0, min(player.oxygen + oxygen_transferred, player.oxygen_cap))
+        # Print transfer information
+        print(f"Transferred {oxygen_transferred:.2f} O2 → Player now has {player.oxygen:.2f}/{player.oxygen_cap}")
+
     #Function to upgrade the tank
     def upgrade_tank(self, oxygen_cap):
         self.oxygen_cap = oxygen_cap
