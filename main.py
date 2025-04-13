@@ -392,7 +392,12 @@ class SpaceShipState(GameState):
                     if self.agent_task:
                         self.agent_task.cancel()
                     self.game.change_state("gameplay")
-
+                elif pygame.K_1 <= event.key <= pygame.K_9:
+                    slot = event.key - pygame.K_1
+                    self.game.player.select_inventory(slot)
+                    print(
+                        f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
+                    
     def update(self, _):
         # Update AI assistant based on ship status
         self.update_ai_assistant()
@@ -412,7 +417,6 @@ class SpaceShipState(GameState):
 
         # Handle player movement and map transitions
         self.game.player.move(self.game.WIDTH, self.game.HEIGHT)
-
         # Check game over condition
         if self.game.player.health <= 0:
             print("Game Over: You died!")
