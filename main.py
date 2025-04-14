@@ -6,7 +6,7 @@ import item
 import math
 import time
 import random
-from Interactions import  PlacedOxygenTank, PlacedPlant
+from Interactions import  PlacedOxygenTank, PlacedPlant, KeyBinds
 from item import Plant, OxygenTank
 import pygame_widgets
 from pygame_widgets.button import Button
@@ -163,85 +163,23 @@ class GameplayState(GameState):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 # Inventory selection
+                selected_slot = self.game.player.selected_inventory_slot
+                item, count = self.game.player.inventory[selected_slot]
+                keybinds = KeyBinds(self.game)
                 if pygame.K_1 <= event.key <= pygame.K_9:
                     slot = event.key - pygame.K_1
                     self.game.player.select_inventory(slot)
                     print(
                         f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
                 elif event.key == pygame.K_p:
-                    self.pressing_p()
+                    keybinds.pressing_p(selected_slot,item, count)
                 elif event.key == pygame.K_h:
-                    self.pressing_h()
+                    keybinds.pressing_h()
                 elif event.key == pygame.K_u:
-                    self.pressing_u()
+                    keybinds.pressing_u(selected_slot,item,count)
                 # Add escape key to return to menu
                 if event.key == pygame.K_ESCAPE:
                     self.game.change_state("menu")
-
-    def pressing_u(self):
-        selected_slot = self.game.player.selected_inventory_slot
-        item, count = self.game.player.inventory[selected_slot]
-        if isinstance(item, OxygenTank):
-            for tank in self.game.player.transferring_tanks[:]:
-                if tank.oxygen > 0:
-                    tank.transfer_oxygen(self.game.player)
-        elif isinstance(item, Plant):
-            if count > 0 and self.game.player.hunger != self.game.player.hunger_cap:
-                item.eat(self.game.player, selected_slot)
-            else:
-                print("You are already full! You can't eat more.")
-
-    def pressing_p(self):
-        selected_slot = self.game.player.selected_inventory_slot
-        item, count = self.game.player.inventory[selected_slot]
-        if count >= 1:
-            if isinstance(item, Plant):
-                # Place the plant in the world
-                placed = PlacedPlant(self.game.player.x, self.game.player.y, self.game.player.map_x,
-                                     self.game.player.map_y, item, game)
-                self.game.planted_crops.append(placed)
-
-                # Decrease item count
-                if count == 1:
-                    self.game.player.inventory[selected_slot] = (None, 0)
-                else:
-                    self.game.player.inventory[selected_slot] = (item, count - 1)
-                print(f"Planted {item.name} at ({self.game.player.x}, {self.game.player.y})")
-
-            if isinstance(item, OxygenTank):
-                placed = PlacedOxygenTank(self.game.player.x, self.game.player.y, self.game.player.map_x,
-                                          self.game.player.map_y, item, game, self.game.player)
-                self.game.oxygen_tanks.append(placed)
-                # Decrease item count
-                if count == 1:
-                    self.game.player.inventory[selected_slot] = (None, 0)
-                else:
-                    self.game.player.inventory[selected_slot] = (item, count - 1)
-                print(f"Planted {item.name} at ({self.game.player.x}, {self.game.player.y})")
-
-    def pressing_h(self):
-        for plant in self.game.planted_crops[:]:
-            plant.check_harvest()
-            if plant.ready:
-                distance = math.hypot(self.game.player.x - plant.x, self.game.player.y - plant.y)
-                if distance < 40:
-                    harvested_items = plant.harvest()
-                    for item in harvested_items:
-                        self.game.player.add_item(item)
-                    self.game.planted_crops.remove(plant)
-
-        for tank in self.game.oxygen_tanks[:]:
-            distance = math.hypot(self.game.player.x - tank.x, self.game.player.y - tank.y)
-            if distance < 40:
-                picked_up_tank = tank.pickup()
-                if self.game.player.add_item(picked_up_tank):
-                    self.game.oxygen_tanks.remove(tank)
-                    print(
-                        f"Picked up {picked_up_tank.name} with {picked_up_tank.oxygen}/{picked_up_tank.oxygen_cap} O2")
-                    if picked_up_tank.oxygen > 0:
-                        self.game.player.transferring_tanks.append(picked_up_tank)
-                else:
-                    print("Inventory full!")
 
     def update(self, _):
         # Check if player is inside the ship
@@ -387,6 +325,9 @@ class SpaceShipState(GameState):
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
+                selected_slot = self.game.player.selected_inventory_slot
+                item, count = self.game.player.inventory[selected_slot]
+                keybinds = KeyBinds(self.game)
                 if event.key == pygame.K_q:  # Press 'q' to quit the agent
                     print("Quitting the AI agent...")
                     if self.agent_task:
@@ -397,7 +338,9 @@ class SpaceShipState(GameState):
                     self.game.player.select_inventory(slot)
                     print(
                         f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
-                    
+                elif event.key == pygame.K_u:
+                    keybinds.pressing_u(selected_slot,item,count)
+
     def update(self, _):
         # Update AI assistant based on ship status
         self.update_ai_assistant()
