@@ -6,7 +6,7 @@ import item
 import math
 import time
 import random
-from interactions import FarmPlot, PlacedOxygenTank
+from Interactions import  PlacedOxygenTank, PlacedPlant, KeyBinds
 from item import Plant, OxygenTank
 import pygame_widgets
 from pygame_widgets.button import Button
@@ -163,12 +163,20 @@ class GameplayState(GameState):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 # Inventory selection
+                selected_slot = self.game.player.selected_inventory_slot
+                item, count = self.game.player.inventory[selected_slot]
+                keybinds = KeyBinds(self.game)
                 if pygame.K_1 <= event.key <= pygame.K_9:
                     slot = event.key - pygame.K_1
                     self.game.player.select_inventory(slot)
                     print(
                         f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
-
+                elif event.key == pygame.K_p:
+                    keybinds.pressing_p(selected_slot,item, count)
+                elif event.key == pygame.K_h:
+                    keybinds.pressing_h()
+                elif event.key == pygame.K_u:
+                    keybinds.pressing_u(selected_slot,item,count)
                 # Add escape key to return to menu
                 if event.key == pygame.K_ESCAPE:
                     self.game.change_state("menu")
@@ -258,6 +266,17 @@ class GameplayState(GameState):
             self.game.player.map_x, self.game.player.map_y)]
         self.game.screen.blit(tile_image, (0, 0))
 
+        for plant in self.game.planted_crops:
+            if (plant.map_x, plant.map_y) == (self.game.player.map_x, self.game.player.map_y):
+                plant.check_harvest()
+                plant.draw(self.game.screen)
+
+
+        for tank in self.game.oxygen_tanks:
+            if (tank.map_x, tank.map_y) == (self.game.player.map_x, self.game.player.map_y):
+                tank.check_near_plant()
+                tank.draw(self.game.screen, self.game.font)
+
         # Draw UI elements
         self.render_ui()
 
@@ -306,11 +325,21 @@ class SpaceShipState(GameState):
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
+                selected_slot = self.game.player.selected_inventory_slot
+                item, count = self.game.player.inventory[selected_slot]
+                keybinds = KeyBinds(self.game)
                 if event.key == pygame.K_q:  # Press 'q' to quit the agent
                     print("Quitting the AI agent...")
                     if self.agent_task:
                         self.agent_task.cancel()
                     self.game.change_state("gameplay")
+                elif pygame.K_1 <= event.key <= pygame.K_9:
+                    slot = event.key - pygame.K_1
+                    self.game.player.select_inventory(slot)
+                    print(
+                        f"Selected inventory slot {slot + 1}: {self.game.player.inventory[slot]}")
+                elif event.key == pygame.K_u:
+                    keybinds.pressing_u(selected_slot,item,count)
 
     def update(self, _):
         # Update AI assistant based on ship status
@@ -331,7 +360,6 @@ class SpaceShipState(GameState):
 
         # Handle player movement and map transitions
         self.game.player.move(self.game.WIDTH, self.game.HEIGHT)
-
         # Check game over condition
         if self.game.player.health <= 0:
             print("Game Over: You died!")
@@ -404,6 +432,8 @@ class Game:
         pygame.display.set_caption("Marooned on Mars")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 24)
+        self.planted_crops = []
+        self.oxygen_tanks = []
 
         # Initialize game components
         self.initialize_player()
@@ -411,6 +441,7 @@ class Game:
         self.create_diamond_mask()
         self.initialize_time()
         self.initialize_inventory_settings()
+
 
         # Create state dictionary
         self.states = {
